@@ -1,1 +1,8 @@
 .env
+backups/
+n8n/backup/credentials/*
+n8n/backup/workflows/*
+!n8n/backup/credentials/.gitkeep
+!n8n/backup/workflows/.gitkeep
+n8n/files/*
+!n8n/files/.gitkeep
