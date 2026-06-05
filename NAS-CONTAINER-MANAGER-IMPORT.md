@@ -28,6 +28,16 @@ Required subfolders:
 - `postgres`
 - `shared`
 
+If you want a smaller handoff package instead of the full repo, generate one on
+the Mac first:
+
+```bash
+./n8n-prepare-nas-bundle.sh
+```
+
+That creates `dist/nas-deploy/` with the compose files, env template, deploy
+helpers, and a short `NEXT-STEPS.txt`.
+
 ## Compose merge rule
 
 Use both compose files together so the NAS override disables the heavy services
