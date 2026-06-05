@@ -66,6 +66,22 @@ curl -sS -H "X-N8N-API-KEY: <key>" \
   "https://your-nas-n8n.example.com/api/v1/workflows?limit=1"
 ```
 
+## Later deploy shortcut
+
+Once the NAS working copy is set up and `.env` is filled, you can use:
+
+```bash
+./n8n-deploy-nas.sh
+```
+
+That script will:
+
+- optionally `git pull --ff-only`
+- render the merged NAS compose file
+- restart the NAS phase-1 stack
+- check `/healthz`
+- check `/api/v1/workflows?limit=1` when `N8N_API_KEY` is set
+
 ## Keep the Mac fallback
 
 Do not retire the Mac stack until:

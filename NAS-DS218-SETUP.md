@@ -140,6 +140,7 @@ Keep the current Mac stack intact until all of these pass on NAS:
 After this DS218+ phase-1 rehearsal succeeds, the next repo change should be:
 
 - a small Synology-specific `.env.example` or `.env.nas.example`
+- a simple NAS deploy helper for controlled pull + restart
 
 Not yet:
 
