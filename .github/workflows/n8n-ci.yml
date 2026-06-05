@@ -1,0 +1,107 @@
+name: n8n-ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/n8n
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Check shell script syntax
+        run: |
+          for file in n8n-*.sh; do
+            bash -n "$file"
+          done
+
+      - name: Run shellcheck
+        run: shellcheck n8n-*.sh
+
+      - name: Validate NAS compose render
+        run: |
+          cp .env.nas.example .env
+          set -a
+          source ./.env
+          set +a
+          ./n8n-render-nas-compose.sh /tmp/docker-compose.nas.merged.yml
+          test -s /tmp/docker-compose.nas.merged.yml
+
+      - name: Validate base compose
+        run: |
+          docker compose config > /tmp/docker-compose.base.yml
+          test -s /tmp/docker-compose.base.yml
+
+  build-image:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build custom n8n image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.n8n
+          push: false
+          tags: local/n8n-ai-kit:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-ghcr:
+    runs-on: ubuntu-latest
+    needs: build-image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and publish custom n8n image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.n8n
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
