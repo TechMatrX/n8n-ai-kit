@@ -56,6 +56,8 @@ without dragging along machine-local secrets, backup payloads, or transient runt
    - replace localhost-only assumptions
    - move webhook/base URLs to NAS-reachable hostnames
    - map persistent data paths to NAS storage
+   - prefer Synology Container Manager bind mounts over named volumes
+   - start with a narrow NAS scope: `n8n` + `postgres`
    - test restore and restart behavior from backup material
 
 ## Suggested Cutover Sequence

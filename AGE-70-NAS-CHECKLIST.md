@@ -25,6 +25,9 @@ Current validated baseline:
 
 ## Phase 1: NAS target definition
 
+- Confirm Synology runtime surface:
+  - DSM `7.3.2-86009 Update 3`
+  - `Container Manager` is the deployment UI/runtime
 - Decide NAS hostname or ingress domain for `n8n`
 - Decide whether NAS will expose:
   - `n8n`
@@ -40,6 +43,9 @@ Current validated baseline:
   - `open-webui` data
   - `flowise` data
   - backup artifacts
+- Recommended DS218+ phase-1 scope:
+  - move `n8n` + `postgres` first
+  - defer `ollama`, `open-webui`, `flowise`, and likely `qdrant`
 
 ## Phase 2: Config adaptation
 

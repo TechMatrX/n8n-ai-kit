@@ -1,0 +1,60 @@
+services:
+  flowise:
+    profiles: ["disabled-on-nas"]
+
+  open-webui:
+    profiles: ["disabled-on-nas"]
+
+  qdrant:
+    profiles: ["disabled-on-nas"]
+
+  ollama-cpu:
+    profiles: ["disabled-on-nas"]
+
+  ollama-gpu:
+    profiles: ["disabled-on-nas"]
+
+  ollama-gpu-amd:
+    profiles: ["disabled-on-nas"]
+
+  ollama-pull-llama-cpu:
+    profiles: ["disabled-on-nas"]
+
+  ollama-pull-llama-gpu:
+    profiles: ["disabled-on-nas"]
+
+  ollama-pull-llama-gpu-amd:
+    profiles: ["disabled-on-nas"]
+
+  postgres:
+    ports: []
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/postgres:/var/lib/postgresql/data
+
+  n8n-import:
+    environment:
+      - WEBHOOK_URL=${WEBHOOK_URL:?set WEBHOOK_URL to your NAS URL}
+      - N8N_HOST=${N8N_HOST:?set N8N_HOST to your NAS hostname}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-https}
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/backup:/backup
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/n8n-files:/home/node/.n8n-files
+
+  n8n:
+    environment:
+      - WEBHOOK_URL=${WEBHOOK_URL:?set WEBHOOK_URL to your NAS URL}
+      - N8N_HOST=${N8N_HOST:?set N8N_HOST to your NAS hostname}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-https}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-${WEBHOOK_URL}}
+      - N8N_SSRF_ALLOWED_HOSTNAMES=${N8N_SSRF_ALLOWED_HOSTNAMES:-host.docker.internal,n8n,postgres}
+      - N8N_SSRF_ALLOWED_IP_RANGES=${N8N_SSRF_ALLOWED_IP_RANGES:-}
+    ports:
+      - "${N8N_HOST_PORT:-5678}:5678"
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/n8n:/home/node/.n8n
+      - ./n8n/demo-data:/demo-data
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/backup:/backup
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/shared:/data/shared
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/n8n-files:/home/node/.n8n-files
