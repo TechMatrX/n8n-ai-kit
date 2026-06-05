@@ -19,7 +19,7 @@ resolve_volume_name() {
 }
 
 if [ -z "$1" ]; then
-    echo "Usage: ./restore_n8n.sh YYYYMMDD_HHMMSS"
+    echo "Usage: ./n8n-restore.sh YYYYMMDD_HHMMSS"
     exit 1
 fi
 
@@ -57,6 +57,12 @@ docker run --rm \
     -v "${backup_dir}/volume:/source" \
     alpine:latest \
     sh -c "cd /dest && tar xzf /source/n8n_storage.tar.gz"
+
+echo "Fixing ownership and permissions on restored n8n volume..."
+docker run --rm \
+    -v "${volume_name}:/dest" \
+    alpine:latest \
+    sh -c "chown -R 1000:1000 /dest && find /dest -type d -exec chmod 750 {} \\; && find /dest -type f -exec chmod 640 {} \\;"
 
 mkdir -p ./n8n/backup/workflows ./n8n/backup/credentials
 rm -rf ./n8n/backup/workflows/* ./n8n/backup/credentials/*

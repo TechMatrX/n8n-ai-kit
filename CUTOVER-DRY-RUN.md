@@ -87,7 +87,7 @@ From `/Users/andy/Studio/ai/n8n-ai-kit`:
 ```bash
 cp .env.example .env
 # fill in the real values from the current local-ai-packaged .env
-./build_n8n.sh
+./n8n-build.sh
 ```
 
 Expected result:
@@ -101,7 +101,7 @@ Expected result:
 From `/Users/andy/Studio/ai-agents-masterclass/local-ai-packaged`:
 
 ```bash
-./backup_n8n.sh
+./n8n-backup.sh
 ```
 
 Expected result:
@@ -212,7 +212,7 @@ docker compose up -d
 3. If the data state was changed and must be restored, use the chosen backup timestamp with:
 
 ```bash
-./restore_n8n.sh YYYYMMDD_HHMMSS
+./n8n-restore.sh YYYYMMDD_HHMMSS
 ```
 
 ## NAS Follow-On

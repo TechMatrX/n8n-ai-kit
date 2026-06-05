@@ -94,7 +94,7 @@ Current validated baseline:
   - stop NAS stack
   - restore previous data snapshot
   - restart with last known-good env
-- Validate `restore_n8n.sh` assumptions still match NAS storage layout
+- Validate `n8n-restore.sh` assumptions still match NAS storage layout
 
 ## Acceptance criteria
 

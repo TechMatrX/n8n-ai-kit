@@ -16,6 +16,9 @@ else
         n8n n8n-import
 fi
 
+echo "Removing stale n8n helper containers before verification..."
+docker rm -f n8n n8n-import 2>/dev/null || true
+
 echo "Verifying compose images..."
 docker compose images
 

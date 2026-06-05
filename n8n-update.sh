@@ -20,9 +20,9 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
-if [ -f "./backup_n8n.sh" ]; then
+if [ -f "./n8n-backup.sh" ]; then
     echo "Running backup before update..."
-    ./backup_n8n.sh
+    ./n8n-backup.sh
 fi
 
 echo "Stopping n8n service..."
@@ -31,7 +31,7 @@ docker compose stop n8n
 if [ "${SKIP_BUILD}" = true ]; then
     echo "Skipping build as requested"
 else
-    ./build_n8n.sh
+    ./n8n-build.sh
 fi
 
 echo "Starting updated stack..."

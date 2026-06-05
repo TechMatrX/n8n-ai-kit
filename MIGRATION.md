@@ -47,7 +47,7 @@ without dragging along machine-local secrets, backup payloads, or transient runt
 
 2. Local cutover dry run
    - create a fresh `.env` in `n8n-ai-kit`
-   - back up the current live stack with `./backup_n8n.sh`
+   - back up the current live stack with `./n8n-backup.sh`
    - copy only the needed backup payloads into `n8n/backup/`
    - bring up the stack from `n8n-ai-kit`
    - verify `n8n`, `postgres`, `qdrant`, `open-webui`, and `flowise`
@@ -62,8 +62,8 @@ without dragging along machine-local secrets, backup payloads, or transient runt
 
 1. `cp .env.example .env`
 2. fill in real secrets and local values
-3. run `./build_n8n.sh`
-4. run `./backup_n8n.sh` in the old stack
+3. run `./n8n-build.sh`
+4. run `./n8n-backup.sh` in the old stack
 5. place importable backup payloads in `n8n/backup/{credentials,workflows}`
 6. start the new stack with `docker compose up -d`
 7. validate the UI and workflow execution at `http://localhost:5678`
