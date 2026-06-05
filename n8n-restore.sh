@@ -44,9 +44,32 @@ until docker compose exec postgres pg_isready -U "${PGUSER}" > /dev/null 2>&1; d
     sleep 1
 done
 
+run_psql_postgres() {
+    docker compose exec postgres psql -v ON_ERROR_STOP=1 -U "${PGUSER}" -d postgres "$@"
+}
+
+wait_for_stable_postgres() {
+    until docker compose exec postgres pg_isready -U "${PGUSER}" > /dev/null 2>&1; do
+        sleep 1
+    done
+    sleep 2
+}
+
 echo "Dropping and recreating database..."
-docker compose exec postgres psql -U "${PGUSER}" -d postgres -c "DROP DATABASE IF EXISTS ${PGDATABASE};"
-docker compose exec postgres psql -U "${PGUSER}" -d postgres -c "CREATE DATABASE ${PGDATABASE};"
+for attempt in 1 2 3 4 5; do
+    if run_psql_postgres -c "DROP DATABASE IF EXISTS ${PGDATABASE};" && \
+       run_psql_postgres -c "CREATE DATABASE ${PGDATABASE};"; then
+        break
+    fi
+
+    if [ "${attempt}" -eq 5 ]; then
+        echo "Failed to reset database ${PGDATABASE} after ${attempt} attempts" >&2
+        exit 1
+    fi
+
+    echo "Postgres reset attempt ${attempt} failed, waiting for stability before retrying..."
+    wait_for_stable_postgres
+done
 
 echo "Restoring PostgreSQL database..."
 docker compose exec -T postgres psql -U "${PGUSER}" "${PGDATABASE}" < "${backup_dir}/database/n8n_backup.sql"
