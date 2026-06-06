@@ -35,7 +35,11 @@ Current validated baseline:
   - `qdrant`
   - `open-webui`
   - `flowise`
-  directly, or behind a reverse proxy
+  directly, or via an ingress layer
+- Preferred ingress decision for phase 1:
+  - use Cloudflare Tunnel via `cloudflared`
+  - do not use Caddy for the public route
+  - do not use Synology Proxy Server for this path
 - Decide persistent storage root on NAS for:
   - `n8n` data
   - `postgres` data
@@ -50,7 +54,9 @@ Current validated baseline:
 ## Phase 2: Config adaptation
 
 - Replace local-only `WEBHOOK_URL` with NAS hostname
-- Confirm whether ngrok/tunnel remains needed after NAS move
+- Add `CLOUDFLARE_TUNNEL_TOKEN` for the named tunnel path
+- Confirm Cloudflare public hostname maps to `http://n8n:5678`
+- Retire ngrok after Cloudflare hostname validation
 - Review `.env` values and separate:
   - portable values
   - machine-local values

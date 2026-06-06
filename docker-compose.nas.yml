@@ -1,4 +1,13 @@
 services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      n8n:
+        condition: service_started
+
   flowise:
     profiles: ["disabled-on-nas"]
 
@@ -50,8 +59,7 @@ services:
       - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-${WEBHOOK_URL}}
       - N8N_SSRF_ALLOWED_HOSTNAMES=${N8N_SSRF_ALLOWED_HOSTNAMES:-host.docker.internal,n8n,postgres}
       - N8N_SSRF_ALLOWED_IP_RANGES=${N8N_SSRF_ALLOWED_IP_RANGES:-}
-    ports:
-      - "${N8N_HOST_PORT:-5678}:5678"
+    ports: []
     volumes:
       - ${NAS_ROOT:?set NAS_ROOT in .env}/n8n:/home/node/.n8n
       - ./n8n/demo-data:/demo-data

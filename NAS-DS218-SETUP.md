@@ -9,6 +9,7 @@ Move only the phase-1 control-plane services onto the Synology DS218+:
 
 - `n8n`
 - `postgres`
+- `cloudflared`
 
 Do not move the heavier AI services yet:
 
@@ -23,6 +24,7 @@ This keeps the first NAS cutover small and reversible.
 
 - DS218+ is better used as a stable workflow/runtime host than as a full AI box
 - `n8n` + `postgres` are the critical services for workflow continuity
+- `cloudflared` gives the NAS a stable public ingress without exposing inbound ports
 - the Mac can remain the fallback and keep the heavier AI workloads
 
 ## Container Manager Notes
@@ -68,7 +70,7 @@ N8N_HOST=your-nas-n8n.example.com
 N8N_PORT=5678
 N8N_PROTOCOL=https
 N8N_EDITOR_BASE_URL=https://your-nas-n8n.example.com
-N8N_HOST_PORT=5678
+CLOUDFLARE_TUNNEL_TOKEN=replace-with-real-token
 ```
 
 Keep your existing secrets as-is unless you explicitly want rotation:
@@ -95,7 +97,15 @@ The NAS override does three things:
 
 1. disables non-phase-1 services
 2. swaps named volumes for Synology bind mounts
-3. replaces localhost-oriented URL assumptions with NAS host values
+3. adds `cloudflared` and replaces localhost-oriented URL assumptions with NAS host values
+
+Public ingress decision:
+
+- use Cloudflare Tunnel via the `cloudflared` container
+- do not use Caddy for the Internet-facing path
+- do not rely on Synology Proxy Server for this design
+- do not publish `n8n` port `5678` externally in the final NAS shape
+- retire ngrok after the named tunnel is live and validated
 
 ## Suggested Rehearsal Flow
 
@@ -122,6 +132,7 @@ set -a; source ./.env; set +a
    - workflows present
    - credentials present
    - shared file access works
+   - Cloudflare Tunnel public hostname reaches `http://n8n:5678`
 
 ## Rollback Rule
 
