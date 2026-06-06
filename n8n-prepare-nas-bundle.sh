@@ -11,8 +11,10 @@ mkdir -p "${BUNDLE_DIR}"
 cp docker-compose.yml "${BUNDLE_DIR}/"
 cp docker-compose.nas.yml "${BUNDLE_DIR}/"
 cp .env.nas.example "${BUNDLE_DIR}/"
+cp n8n-task-runners.json "${BUNDLE_DIR}/"
 cp NAS-DS218-SETUP.md "${BUNDLE_DIR}/"
 cp NAS-CONTAINER-MANAGER-IMPORT.md "${BUNDLE_DIR}/"
+cp n8n-backup.sh "${BUNDLE_DIR}/"
 cp n8n-render-nas-compose.sh "${BUNDLE_DIR}/"
 cp n8n-deploy-nas.sh "${BUNDLE_DIR}/"
 
@@ -36,6 +38,7 @@ cat > "${BUNDLE_DIR}/NEXT-STEPS.txt" <<'EOF'
 EOF
 
 chmod +x "${BUNDLE_DIR}/n8n-render-nas-compose.sh"
+chmod +x "${BUNDLE_DIR}/n8n-backup.sh"
 chmod +x "${BUNDLE_DIR}/n8n-deploy-nas.sh"
 
 echo "Prepared NAS bundle at: ${BUNDLE_DIR}"

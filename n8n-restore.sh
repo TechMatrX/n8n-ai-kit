@@ -8,6 +8,25 @@ export PGDATABASE=${PGDATABASE:-n8n}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
 
+COMPOSE_ARGS=()
+HOST_BACKUP_DIR="./n8n/backup"
+
+if [ -f "./docker-compose.nas.yml" ] && [ -f "./.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "./.env"
+    set +a
+
+    if [ -n "${NAS_ROOT:-}" ]; then
+        COMPOSE_ARGS=(-f docker-compose.yml -f docker-compose.nas.yml)
+        HOST_BACKUP_DIR="${NAS_ROOT}/backup"
+    fi
+fi
+
+docker_compose() {
+    docker compose "${COMPOSE_ARGS[@]}" "$@"
+}
+
 resolve_volume_name() {
     local live_name
     live_name=$(docker inspect n8n --format '{{range .Mounts}}{{if eq .Destination "/home/node/.n8n"}}{{.Name}}{{end}}{{end}}' 2>/dev/null || true)
@@ -34,22 +53,22 @@ fi
 volume_name=$(resolve_volume_name)
 
 echo "Stopping n8n service..."
-docker compose stop n8n
+docker_compose stop n8n
 
 echo "Ensuring postgres is running..."
-docker compose up -d postgres
+docker_compose up -d postgres
 
 echo "Waiting for postgres to be ready..."
-until docker compose exec postgres pg_isready -U "${PGUSER}" > /dev/null 2>&1; do
+until docker_compose exec postgres pg_isready -U "${PGUSER}" > /dev/null 2>&1; do
     sleep 1
 done
 
 run_psql_postgres() {
-    docker compose exec postgres psql -v ON_ERROR_STOP=1 -U "${PGUSER}" -d postgres "$@"
+    docker_compose exec postgres psql -v ON_ERROR_STOP=1 -U "${PGUSER}" -d postgres "$@"
 }
 
 wait_for_stable_postgres() {
-    until docker compose exec postgres pg_isready -U "${PGUSER}" > /dev/null 2>&1; do
+    until docker_compose exec postgres pg_isready -U "${PGUSER}" > /dev/null 2>&1; do
         sleep 1
     done
     sleep 2
@@ -72,7 +91,7 @@ for attempt in 1 2 3 4 5; do
 done
 
 echo "Restoring PostgreSQL database..."
-docker compose exec -T postgres psql -U "${PGUSER}" "${PGDATABASE}" < "${backup_dir}/database/n8n_backup.sql"
+docker_compose exec -T postgres psql -U "${PGUSER}" "${PGDATABASE}" < "${backup_dir}/database/n8n_backup.sql"
 
 echo "Restoring n8n volume ${volume_name}..."
 docker run --rm \
@@ -87,13 +106,13 @@ docker run --rm \
     alpine:latest \
     sh -c "chown -R 1000:1000 /dest && find /dest -type d -exec chmod 750 {} \\; && find /dest -type f -exec chmod 640 {} \\;"
 
-mkdir -p ./n8n/backup/workflows ./n8n/backup/credentials
-rm -rf ./n8n/backup/workflows/* ./n8n/backup/credentials/*
-cp -r "${backup_dir}/workflows/." ./n8n/backup/workflows/ 2>/dev/null || true
-cp -r "${backup_dir}/credentials/." ./n8n/backup/credentials/ 2>/dev/null || true
+mkdir -p "${HOST_BACKUP_DIR}/workflows" "${HOST_BACKUP_DIR}/credentials"
+rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* 2>/dev/null || true
+cp -r "${backup_dir}/workflows/." "${HOST_BACKUP_DIR}/workflows/" 2>/dev/null || true
+cp -r "${backup_dir}/credentials/." "${HOST_BACKUP_DIR}/credentials/" 2>/dev/null || true
 
 echo "Restarting import and n8n services..."
-docker compose up -d n8n-import
-docker compose up -d n8n
+docker_compose up -d n8n-import
+docker_compose up -d n8n
 
 echo "Restore completed from ${backup_dir}"
