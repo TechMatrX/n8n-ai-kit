@@ -52,6 +52,8 @@ x-ollama: &service-ollama
   container_name: ollama
   networks: ['demo']
   restart: unless-stopped
+  environment:
+    - OLLAMA_NUM_THREADS=${OLLAMA_NUM_THREADS:-2}
   ports:
     - 11434:11434
   volumes:
