@@ -68,7 +68,7 @@ x-init-ollama: &init-ollama
     - OLLAMA_HOST=ollama:11434
   command:
     - "-c"
-    - "sleep 3; ollama pull llama3.2; ollama pull nomic-embed-text"
+    - "sleep 3; ollama pull qwen3.5:0.8b; ollama pull nomic-embed-text"
 
 services:
   flowise:

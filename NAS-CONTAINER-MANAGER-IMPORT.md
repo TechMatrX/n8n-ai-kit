@@ -25,7 +25,9 @@ Required subfolders:
 - `backup`
 - `n8n`
 - `n8n-files`
+- `ollama`
 - `postgres`
+- `qdrant`
 - `shared`
 
 If you want a smaller handoff package instead of the full repo, generate one on

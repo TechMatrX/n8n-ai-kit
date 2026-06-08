@@ -29,7 +29,9 @@ Use these as the source of truth for live data:
 /volume1/docker/n8n-ai-kit/backup
 /volume1/docker/n8n-ai-kit/n8n
 /volume1/docker/n8n-ai-kit/n8n-files
+/volume1/docker/n8n-ai-kit/ollama
 /volume1/docker/n8n-ai-kit/postgres
+/volume1/docker/n8n-ai-kit/qdrant
 /volume1/docker/n8n-ai-kit/shared
 ```
 
@@ -198,4 +200,3 @@ The following are confirmed working in the final NAS state:
 - JS external runner
 - Python external runner
 - healthy `n8n`, `postgres`, `cloudflared`, and `n8n-runners`
-
