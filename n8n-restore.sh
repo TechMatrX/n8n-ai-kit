@@ -112,7 +112,7 @@ cp -r "${backup_dir}/workflows/." "${HOST_BACKUP_DIR}/workflows/" 2>/dev/null ||
 cp -r "${backup_dir}/credentials/." "${HOST_BACKUP_DIR}/credentials/" 2>/dev/null || true
 
 echo "Restarting import and n8n services..."
-docker_compose up -d n8n-import
+N8N_IMPORT_MODE=restore docker compose "${COMPOSE_ARGS[@]}" up -d n8n-import
 docker_compose up -d n8n
 
 echo "Restore completed from ${backup_dir}"

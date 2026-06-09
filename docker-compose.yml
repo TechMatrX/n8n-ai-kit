@@ -123,6 +123,8 @@ services:
     <<: *service-n8n
     hostname: n8n-import
     container_name: n8n-import
+    environment:
+      - N8N_IMPORT_MODE=${N8N_IMPORT_MODE:-bootstrap}
     entrypoint: /bin/sh
     command:
       - "-c"
@@ -132,11 +134,18 @@ services:
         echo "Waiting for directory setup..."
         sleep 5
 
+        import_mode="${N8N_IMPORT_MODE:-bootstrap}"
         existing_workflows="$(n8n list:workflow --onlyId 2>/dev/null || true)"
 
-        if [ -n "$$existing_workflows" ]; then
+        if [ "$$import_mode" = "bootstrap" ] && [ -n "$$existing_workflows" ]; then
           echo "Existing workflows detected; skipping bootstrap import"
           exit 0
+        fi
+
+        if [ "$$import_mode" = "restore" ]; then
+          echo "Restore mode enabled; importing over existing state if payloads are present"
+        else
+          echo "Bootstrap mode enabled"
         fi
 
         if [ -d "/backup/credentials" ] && [ "$(ls -A /backup/credentials 2>/dev/null)" ]; then

@@ -122,6 +122,30 @@ What it restores:
 - workflow backup payload
 - credentials backup payload
 
+Restore uses explicit import override mode for `n8n-import`.
+
+### Import Modes
+
+`n8n-import` now supports two modes:
+
+- `bootstrap` = default; import only when the instance is empty
+- `restore` = explicit overwrite/import mode for recovery or cutover
+
+Examples:
+
+```bash
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d n8n-import
+```
+
+This uses default bootstrap behavior.
+
+```bash
+N8N_IMPORT_MODE=restore sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d n8n-import
+```
+
+This forces restore behavior and may overwrite existing workflows/credentials if
+payloads are present under `/backup`.
+
 ## Critical Operational Notes
 
 ### 1. Avoid normal dependency restarts during recovery
