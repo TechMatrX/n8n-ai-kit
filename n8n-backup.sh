@@ -27,13 +27,13 @@ docker_compose() {
     docker compose "${COMPOSE_ARGS[@]}" "$@"
 }
 
-resolve_volume_name() {
-    local live_name
-    live_name=$(docker inspect n8n --format '{{range .Mounts}}{{if eq .Destination "/home/node/.n8n"}}{{.Name}}{{end}}{{end}}' 2>/dev/null || true)
-    if [ -n "${live_name}" ]; then
-        echo "${live_name}"
+resolve_storage_mount() {
+    local mount_spec
+    mount_spec=$(docker inspect n8n --format '{{range .Mounts}}{{if eq .Destination "/home/node/.n8n"}}{{.Type}}|{{.Source}}|{{.Name}}{{end}}{{end}}' 2>/dev/null || true)
+    if [ -n "${mount_spec}" ]; then
+        echo "${mount_spec}"
     else
-        echo "$(basename "${SCRIPT_DIR}")_n8n_storage"
+        echo "volume||$(basename "${SCRIPT_DIR}")_n8n_storage"
     fi
 }
 
@@ -46,7 +46,11 @@ done
 
 mkdir -p "${HOST_BACKUP_DIR}/workflows" "${HOST_BACKUP_DIR}/credentials"
 
-volume_name=$(resolve_volume_name)
+mount_spec=$(resolve_storage_mount)
+mount_type=${mount_spec%%|*}
+mount_rest=${mount_spec#*|}
+mount_source=${mount_rest%%|*}
+mount_name=${mount_rest##*|}
 
 echo "Exporting n8n workflows and credentials..."
 docker_compose exec n8n mkdir -p /backup/workflows /backup/credentials
@@ -64,9 +68,17 @@ rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* 2>/de
 echo "Backing up PostgreSQL database..."
 docker_compose exec postgres pg_dump -U "${PGUSER}" "${PGDATABASE}" > "${backup_dir}/database/n8n_backup.sql"
 
-echo "Backing up n8n volume ${volume_name}..."
+if [ "${mount_type}" = "bind" ]; then
+    storage_source="${mount_source}"
+    storage_label="${mount_source}"
+else
+    storage_source="${mount_name}"
+    storage_label="${mount_name}"
+fi
+
+echo "Backing up n8n volume ${storage_label}..."
 docker run --rm \
-    -v "${volume_name}:/source:ro" \
+    -v "${storage_source}:/source:ro" \
     -v "${backup_dir}/volume:/dest" \
     alpine:latest \
     tar czf /dest/n8n_storage.tar.gz -C /source .
