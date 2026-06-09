@@ -59,6 +59,7 @@ cp -r "${HOST_BACKUP_DIR}/credentials/." "${backup_dir}/credentials/" 2>/dev/nul
 
 echo "Clearing temporary export files..."
 docker_compose exec n8n sh -lc 'rm -rf /backup/workflows/* /backup/credentials/* 2>/dev/null || true'
+rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* 2>/dev/null || true
 
 echo "Backing up PostgreSQL database..."
 docker_compose exec postgres pg_dump -U "${PGUSER}" "${PGDATABASE}" > "${backup_dir}/database/n8n_backup.sql"

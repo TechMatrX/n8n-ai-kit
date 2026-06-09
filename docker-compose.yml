@@ -132,10 +132,17 @@ services:
         echo "Waiting for directory setup..."
         sleep 5
 
+        existing_workflows="$(n8n list:workflow --onlyId 2>/dev/null || true)"
+
+        if [ -n "$existing_workflows" ]; then
+          echo "Existing workflows detected; skipping bootstrap import"
+          exit 0
+        fi
+
         if [ -d "/backup/credentials" ] && [ "$(ls -A /backup/credentials 2>/dev/null)" ]; then
           echo "Importing credentials from backup..."
           n8n import:credentials --separate --input=/backup/credentials
-        elif [ -d "/demo-data/credentials" ] && [ "$(ls -A /demo-data/credentials 2>/dev/null)" ] && [ -z "$(n8n list:workflow --onlyId)" ]; then
+        elif [ -d "/demo-data/credentials" ] && [ "$(ls -A /demo-data/credentials 2>/dev/null)" ]; then
           echo "Importing demo credentials..."
           n8n import:credentials --separate --input=/demo-data/credentials
         else
@@ -145,7 +152,7 @@ services:
         if [ -d "/backup/workflows" ] && [ "$(ls -A /backup/workflows 2>/dev/null)" ]; then
           echo "Importing workflows from backup..."
           n8n import:workflow --separate --input=/backup/workflows
-        elif [ -d "/demo-data/workflows" ] && [ "$(ls -A /demo-data/workflows 2>/dev/null)" ] && [ -z "$(n8n list:workflow --onlyId)" ]; then
+        elif [ -d "/demo-data/workflows" ] && [ "$(ls -A /demo-data/workflows 2>/dev/null)" ]; then
           echo "Importing demo workflows..."
           n8n import:workflow --separate --input=/demo-data/workflows
         else
