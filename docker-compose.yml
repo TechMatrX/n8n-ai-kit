@@ -134,7 +134,7 @@ services:
 
         existing_workflows="$(n8n list:workflow --onlyId 2>/dev/null || true)"
 
-        if [ -n "$existing_workflows" ]; then
+        if [ -n "$$existing_workflows" ]; then
           echo "Existing workflows detected; skipping bootstrap import"
           exit 0
         fi
