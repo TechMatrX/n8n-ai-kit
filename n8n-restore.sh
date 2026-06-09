@@ -4,6 +4,7 @@ set -eo pipefail
 export PGUSER=${PGUSER:-root}
 export PGPASSWORD=${PGPASSWORD:-password}
 export PGDATABASE=${PGDATABASE:-n8n}
+export N8N_IMPORT_FORMAT=${N8N_IMPORT_FORMAT:-auto}
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
@@ -27,6 +28,19 @@ docker_compose() {
     docker compose "${COMPOSE_ARGS[@]}" "$@"
 }
 
+resolve_import_format() {
+    if [ "${N8N_IMPORT_FORMAT}" != "auto" ]; then
+        echo "${N8N_IMPORT_FORMAT}"
+        return
+    fi
+
+    if [ -d "${backup_dir}/entities" ] && [ -n "$(ls -A "${backup_dir}/entities" 2>/dev/null)" ]; then
+        echo "entities"
+    else
+        echo "split"
+    fi
+}
+
 resolve_volume_name() {
     local live_name
     live_name=$(docker inspect n8n --format '{{range .Mounts}}{{if eq .Destination "/home/node/.n8n"}}{{.Name}}{{end}}{{end}}' 2>/dev/null || true)
@@ -47,6 +61,12 @@ backup_dir="./backups/${timestamp}"
 
 if [ ! -d "${backup_dir}" ]; then
     echo "Backup directory ${backup_dir} not found"
+    exit 1
+fi
+
+import_format=$(resolve_import_format)
+if [ "${import_format}" != "split" ] && [ "${import_format}" != "entities" ]; then
+    echo "Unsupported N8N_IMPORT_FORMAT=${import_format}. Use auto, split, or entities." >&2
     exit 1
 fi
 
@@ -106,13 +126,18 @@ docker run --rm \
     alpine:latest \
     sh -c "chown -R 1000:1000 /dest && find /dest -type d -exec chmod 750 {} \\; && find /dest -type f -exec chmod 640 {} \\;"
 
-mkdir -p "${HOST_BACKUP_DIR}/workflows" "${HOST_BACKUP_DIR}/credentials"
-rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* 2>/dev/null || true
-cp -r "${backup_dir}/workflows/." "${HOST_BACKUP_DIR}/workflows/" 2>/dev/null || true
-cp -r "${backup_dir}/credentials/." "${HOST_BACKUP_DIR}/credentials/" 2>/dev/null || true
+mkdir -p "${HOST_BACKUP_DIR}/workflows" "${HOST_BACKUP_DIR}/credentials" "${HOST_BACKUP_DIR}/entities"
+rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* "${HOST_BACKUP_DIR}/entities/"* 2>/dev/null || true
+
+if [ "${import_format}" = "entities" ]; then
+    cp -r "${backup_dir}/entities/." "${HOST_BACKUP_DIR}/entities/" 2>/dev/null || true
+else
+    cp -r "${backup_dir}/workflows/." "${HOST_BACKUP_DIR}/workflows/" 2>/dev/null || true
+    cp -r "${backup_dir}/credentials/." "${HOST_BACKUP_DIR}/credentials/" 2>/dev/null || true
+fi
 
 echo "Restarting import and n8n services..."
-N8N_IMPORT_MODE=restore docker compose "${COMPOSE_ARGS[@]}" up -d n8n-import
+N8N_IMPORT_MODE=restore N8N_IMPORT_FORMAT="${import_format}" docker compose "${COMPOSE_ARGS[@]}" up -d n8n-import
 docker_compose up -d n8n
 
 echo "Restore completed from ${backup_dir}"

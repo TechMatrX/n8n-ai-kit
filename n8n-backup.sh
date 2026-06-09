@@ -4,6 +4,7 @@ set -eo pipefail
 export PGUSER=${PGUSER:-root}
 export PGPASSWORD=${PGPASSWORD:-password}
 export PGDATABASE=${PGDATABASE:-n8n}
+export N8N_EXPORT_FORMAT=${N8N_EXPORT_FORMAT:-split}
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
@@ -40,11 +41,11 @@ resolve_storage_mount() {
 timestamp=$(date +%Y%m%d_%H%M%S)
 backup_dir="./backups/${timestamp}"
 
-for dir in workflows credentials database volume; do
+for dir in workflows credentials entities database volume; do
     mkdir -p "${backup_dir}/${dir}"
 done
 
-mkdir -p "${HOST_BACKUP_DIR}/workflows" "${HOST_BACKUP_DIR}/credentials"
+mkdir -p "${HOST_BACKUP_DIR}/workflows" "${HOST_BACKUP_DIR}/credentials" "${HOST_BACKUP_DIR}/entities"
 
 mount_spec=$(resolve_storage_mount)
 mount_type=${mount_spec%%|*}
@@ -52,18 +53,38 @@ mount_rest=${mount_spec#*|}
 mount_source=${mount_rest%%|*}
 mount_name=${mount_rest##*|}
 
-echo "Exporting n8n workflows and credentials..."
-docker_compose exec n8n mkdir -p /backup/workflows /backup/credentials
-docker_compose exec n8n sh -lc 'rm -rf /backup/workflows/* /backup/credentials/* 2>/dev/null || true'
-docker_compose exec n8n n8n export:workflow --backup --output=/backup/workflows
-docker_compose exec n8n n8n export:credentials --backup --output=/backup/credentials
+echo "Exporting n8n backup payloads..."
+docker_compose exec n8n mkdir -p /backup/workflows /backup/credentials /backup/entities
+docker_compose exec n8n sh -lc 'rm -rf /backup/workflows/* /backup/credentials/* /backup/entities/* 2>/dev/null || true'
 
-cp -r "${HOST_BACKUP_DIR}/workflows/." "${backup_dir}/workflows/" 2>/dev/null || true
-cp -r "${HOST_BACKUP_DIR}/credentials/." "${backup_dir}/credentials/" 2>/dev/null || true
+case "${N8N_EXPORT_FORMAT}" in
+    split)
+        docker_compose exec n8n n8n export:workflow --backup --output=/backup/workflows
+        docker_compose exec n8n n8n export:credentials --backup --output=/backup/credentials
+        cp -r "${HOST_BACKUP_DIR}/workflows/." "${backup_dir}/workflows/" 2>/dev/null || true
+        cp -r "${HOST_BACKUP_DIR}/credentials/." "${backup_dir}/credentials/" 2>/dev/null || true
+        ;;
+    entities)
+        docker_compose exec n8n n8n export:entities --outputDir=/backup/entities
+        cp -r "${HOST_BACKUP_DIR}/entities/." "${backup_dir}/entities/" 2>/dev/null || true
+        ;;
+    both)
+        docker_compose exec n8n n8n export:workflow --backup --output=/backup/workflows
+        docker_compose exec n8n n8n export:credentials --backup --output=/backup/credentials
+        docker_compose exec n8n n8n export:entities --outputDir=/backup/entities
+        cp -r "${HOST_BACKUP_DIR}/workflows/." "${backup_dir}/workflows/" 2>/dev/null || true
+        cp -r "${HOST_BACKUP_DIR}/credentials/." "${backup_dir}/credentials/" 2>/dev/null || true
+        cp -r "${HOST_BACKUP_DIR}/entities/." "${backup_dir}/entities/" 2>/dev/null || true
+        ;;
+    *)
+        echo "Unsupported N8N_EXPORT_FORMAT=${N8N_EXPORT_FORMAT}. Use split, entities, or both." >&2
+        exit 1
+        ;;
+esac
 
 echo "Clearing temporary export files..."
-docker_compose exec n8n sh -lc 'rm -rf /backup/workflows/* /backup/credentials/* 2>/dev/null || true'
-rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* 2>/dev/null || true
+docker_compose exec n8n sh -lc 'rm -rf /backup/workflows/* /backup/credentials/* /backup/entities/* 2>/dev/null || true'
+rm -rf "${HOST_BACKUP_DIR}/workflows/"* "${HOST_BACKUP_DIR}/credentials/"* "${HOST_BACKUP_DIR}/entities/"* 2>/dev/null || true
 
 echo "Backing up PostgreSQL database..."
 docker_compose exec postgres pg_dump -U "${PGUSER}" "${PGDATABASE}" > "${backup_dir}/database/n8n_backup.sql"

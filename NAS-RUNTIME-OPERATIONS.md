@@ -106,8 +106,23 @@ What it captures:
 
 - workflows export
 - credentials export
+- optional entities export
 - PostgreSQL dump
 - `n8n` volume archive
+
+Formats:
+
+- default: split workflow + credentials exports
+- `N8N_EXPORT_FORMAT=entities`: export database entities JSON instead
+- `N8N_EXPORT_FORMAT=both`: capture both split exports and entities
+
+Examples:
+
+```bash
+sudo ./n8n-backup.sh
+N8N_EXPORT_FORMAT=entities sudo ./n8n-backup.sh
+N8N_EXPORT_FORMAT=both sudo ./n8n-backup.sh
+```
 
 ### Restore
 
@@ -119,10 +134,24 @@ What it restores:
 
 - PostgreSQL
 - `n8n` volume
-- workflow backup payload
-- credentials backup payload
+- workflow + credentials payload, or entities payload
 
 Restore uses explicit import override mode for `n8n-import`.
+
+Import format selection:
+
+- default: `auto`
+- if `./backups/<timestamp>/entities` is populated, restore uses entities import
+- otherwise it uses split workflow + credentials import
+- you can override with `N8N_IMPORT_FORMAT=split` or `N8N_IMPORT_FORMAT=entities`
+
+Examples:
+
+```bash
+sudo ./n8n-restore.sh YYYYMMDD_HHMMSS
+N8N_IMPORT_FORMAT=entities sudo ./n8n-restore.sh YYYYMMDD_HHMMSS
+N8N_IMPORT_FORMAT=split sudo ./n8n-restore.sh YYYYMMDD_HHMMSS
+```
 
 ### Import Modes
 
@@ -130,6 +159,11 @@ Restore uses explicit import override mode for `n8n-import`.
 
 - `bootstrap` = default; import only when the instance is empty
 - `restore` = explicit overwrite/import mode for recovery or cutover
+
+It also supports two import formats:
+
+- `split` = credentials + workflows using `import:credentials` and `import:workflow`
+- `entities` = full database-entity import using `import:entities`
 
 Examples:
 
@@ -140,11 +174,23 @@ sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.y
 This uses default bootstrap behavior.
 
 ```bash
+N8N_IMPORT_FORMAT=entities sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d n8n-import
+```
+
+This uses bootstrap behavior with entities import format.
+
+```bash
 N8N_IMPORT_MODE=restore sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d n8n-import
 ```
 
 This forces restore behavior and may overwrite existing workflows/credentials if
 payloads are present under `/backup`.
+
+```bash
+N8N_IMPORT_MODE=restore N8N_IMPORT_FORMAT=entities sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d n8n-import
+```
+
+This forces restore behavior using `import:entities`.
 
 ## Critical Operational Notes
 
