@@ -21,6 +21,14 @@ Primary services:
 - `cloudflared`
 - `task-runners` (`n8n-runners`)
 
+Image and model control is compose-driven:
+
+- `CLOUDFLARED_IMAGE` controls the Cloudflare Tunnel image tag
+- `N8N_IMAGE` controls the base image used to build the custom `n8n` container
+- `N8N_RUNNERS_IMAGE` controls the external task-runners image tag
+- `OLLAMA_IMAGE` controls the Ollama image tag
+- `OLLAMA_PULL_MODELS` controls which local Ollama models are pre-pulled
+
 ## Canonical NAS Data Paths
 
 Use these as the source of truth for live data:
@@ -59,7 +67,7 @@ n8n-task-runners.json
 Expected services:
 
 - `n8n` exposes the task broker on `0.0.0.0:5679`
-- `task-runners` uses `n8nio/runners:2.23.0`
+- `task-runners` uses `n8nio/runners:2.23.4`
 - JavaScript runner health check port: `5681`
 - Python runner health check port: `5682`
 - Launcher health check port: `5680`
@@ -88,6 +96,32 @@ Use `--no-deps` to avoid retriggering one-shot helpers such as `n8n-import`.
 
 ```bash
 sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d --no-deps n8n
+```
+
+### Refresh only Ollama or Cloudflared safely
+
+Prefer compose-based updates over Synology Container Manager one-click updates so
+the running containers stay aligned with the checked-in bundle.
+
+Examples:
+
+```bash
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml pull ollama-cpu cloudflared
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d --no-deps --force-recreate ollama-cpu cloudflared
+```
+
+To refresh `n8n` after changing `N8N_IMAGE`, rebuild and recreate it explicitly:
+
+```bash
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml build --pull n8n n8n-import
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d --no-deps --force-recreate n8n-import n8n
+```
+
+To refresh external runners after changing `N8N_RUNNERS_IMAGE`:
+
+```bash
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml pull task-runners
+sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d --no-deps --force-recreate task-runners
 ```
 
 ### Recreate external runners

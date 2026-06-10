@@ -124,6 +124,37 @@ After completing the installation steps above, simply follow the steps below to 
    until Ollama finishes downloading Llama3.2. You can inspect the docker
    console logs to check on the progress.
 
+### Configuring pre-pulled Ollama models
+
+The compose stack can pre-pull multiple Ollama models during startup via
+`OLLAMA_PULL_MODELS`.
+
+Example:
+
+```bash
+OLLAMA_PULL_MODELS=qwen2.5:1.5b,nomic-embed-text
+```
+
+Notes:
+
+- Separate models with commas or spaces
+- The helper waits for Ollama to become ready before pulling
+- Use locally pullable model names here; cloud-only aliases should not be added
+
+### Managing image versions
+
+The stack supports env-controlled image pins for the main runtime components:
+
+```bash
+N8N_IMAGE=n8nio/n8n:2.23.4
+N8N_RUNNERS_IMAGE=n8nio/runners:2.23.4
+OLLAMA_IMAGE=ollama/ollama:latest
+```
+
+For NAS deployments, prefer updating these env values and then recreating the
+affected services through Docker Compose instead of clicking update directly in
+the container UI.
+
 To open n8n at any time, visit <http://localhost:5678/> in your browser.
 
 With your n8n instance, you’ll have access to over 400 integrations and a

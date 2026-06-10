@@ -13,6 +13,8 @@ x-n8n: &service-n8n
   build:
     context: .
     dockerfile: Dockerfile.n8n
+    args:
+      N8N_IMAGE: ${N8N_IMAGE:-n8nio/n8n:2.23.4}
   networks: ['demo']
   environment:
     - DB_TYPE=postgresdb
@@ -48,7 +50,7 @@ x-n8n: &service-n8n
     - "host.docker.internal:host-gateway"
 
 x-ollama: &service-ollama
-  image: ollama/ollama:latest
+  image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
   container_name: ollama
   networks: ['demo']
   restart: unless-stopped
@@ -60,7 +62,7 @@ x-ollama: &service-ollama
     - ollama_storage:/root/.ollama
 
 x-init-ollama: &init-ollama
-  image: ollama/ollama:latest
+  image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
   networks: ['demo']
   container_name: ollama-pull-llama
   volumes:
@@ -68,9 +70,34 @@ x-init-ollama: &init-ollama
   entrypoint: /bin/sh
   environment:
     - OLLAMA_HOST=ollama:11434
+    - OLLAMA_PULL_MODELS=${OLLAMA_PULL_MODELS:-qwen2.5:1.5b,nomic-embed-text}
   command:
     - "-c"
-    - "sleep 3; ollama pull qwen3.5:0.8b; ollama pull nomic-embed-text"
+    - |
+      set -eu
+
+      echo "Waiting for Ollama API at $$OLLAMA_HOST..."
+      retries=60
+      until ollama list >/dev/null 2>&1; do
+        retries=$$((retries - 1))
+        if [ "$$retries" -le 0 ]; then
+          echo "Timed out waiting for Ollama"
+          exit 1
+        fi
+        sleep 2
+      done
+
+      models="$$(printf '%s' "$$OLLAMA_PULL_MODELS" | tr ',\n' '  ')"
+
+      if [ -z "$$(printf '%s' "$$models" | tr -d ' ')" ]; then
+        echo "No Ollama models configured for pre-pull"
+        exit 0
+      fi
+
+      for model in $$models; do
+        echo "Pulling Ollama model: $$model"
+        ollama pull "$$model"
+      done
 
 services:
   flowise:
