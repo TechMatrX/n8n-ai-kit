@@ -21,6 +21,17 @@ Primary services:
 - `cloudflared`
 - `task-runners` (`n8n-runners`)
 
+Phase 1 media execution path:
+
+```text
+n8n
+  -> https://media-worker.techmatrx.com
+  -> media-worker-daemon
+  -> local ComfyUI
+  -> n8n callback webhook
+  -> OpenClaw completion endpoint
+```
+
 Image and model control is compose-driven:
 
 - `CLOUDFLARED_IMAGE` controls the Cloudflare Tunnel image tag
@@ -62,6 +73,16 @@ Key files:
 docker-compose.nas.yml
 n8n-task-runners.json
 .env
+```
+
+Phase 1 media-worker env keys expected in `.env`:
+
+```bash
+MEDIA_WORKER_BASE_URL=https://media-worker.techmatrx.com
+MEDIA_WORKER_INGRESS_TOKEN=replace-with-worker-ingress-token
+MEDIA_WORKER_CALLBACK_TOKEN=replace-with-worker-callback-token
+OPENCLAW_MEDIA_COMPLETION_URL=https://<openclaw-host>/internal/media/jobs/complete
+OPENCLAW_MEDIA_COMPLETION_TOKEN=replace-with-openclaw-completion-token
 ```
 
 Expected services:
