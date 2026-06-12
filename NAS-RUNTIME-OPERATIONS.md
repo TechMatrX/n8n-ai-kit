@@ -81,9 +81,26 @@ Phase 1 media-worker env keys expected in `.env`:
 MEDIA_WORKER_BASE_URL=https://media-worker.techmatrx.com
 MEDIA_WORKER_INGRESS_TOKEN=replace-with-worker-ingress-token
 MEDIA_WORKER_CALLBACK_TOKEN=replace-with-worker-callback-token
-OPENCLAW_MEDIA_COMPLETION_URL=https://<openclaw-host>/internal/media/jobs/complete
+OPENCLAW_MEDIA_COMPLETION_URL=https://openclaw-media.techmatrx.com/internal/media/jobs/complete
 OPENCLAW_MEDIA_COMPLETION_TOKEN=replace-with-openclaw-completion-token
 ```
+
+`OPENCLAW_MEDIA_COMPLETION_*` enables Callback v1 to notify OpenClaw after it
+updates the n8n job row. The OpenClaw receiver is the local `media-completion`
+plugin exposed through Cloudflare Tunnel at
+`openclaw-media.techmatrx.com`.
+
+The completion payload should include artifact pointers so OpenClaw does not
+have to search for output media:
+
+- `requestId`
+- `jobId`
+- `status`
+- `assetUrls` for protected/downloadable URLs when available
+- `outputPath` for local/admin-only artifacts
+- `mimeType`, `duration`, `sizeBytes` when known
+- `metadata.profile` and `metadata.traceId`
+- `error` for failed jobs
 
 Expected services:
 
@@ -118,6 +135,10 @@ Use `--no-deps` to avoid retriggering one-shot helpers such as `n8n-import`.
 ```bash
 sudo /usr/local/bin/docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d --no-deps n8n
 ```
+
+After changing `.env`, recreate `n8n` before testing Callback v1 notification;
+otherwise the running container will keep the old environment and
+`Notify OpenClaw` will remain disabled.
 
 ### Refresh only Ollama or Cloudflared safely
 
