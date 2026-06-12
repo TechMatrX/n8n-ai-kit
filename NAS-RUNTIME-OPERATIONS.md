@@ -136,11 +136,19 @@ MEDIA_ARTIFACT_S3_ENDPOINT=http://100.73.253.62:9000
 MEDIA_ARTIFACT_S3_FORCE_PATH_STYLE=true
 ```
 
+`generated/audio` is the current Phase 1 namespace, not the whole artifact
+model. Keep the bucket layout media-type aware so image and video can be added
+without redesign:
+
+- `generated/audio/YYYY/MM/DD/<requestId>/<filename>`
+- `generated/image/YYYY/MM/DD/<requestId>/<filename>`
+- `generated/video/YYYY/MM/DD/<requestId>/<filename>`
+
 Recommended policy:
 
 - bucket stays private
 - media-worker gets a dedicated access key
-- allow object put/get only under `generated/audio/*`
+- allow object put/get under the generated media prefixes needed by the worker
 - generate presigned download URLs for delivery/UI use
 - keep MinIO root credentials for administration only
 
