@@ -117,8 +117,32 @@ Expected services:
 - JavaScript runner health check port: `5681`
 - Python runner health check port: `5682`
 - Launcher health check port: `5680`
+- `minio` provides private S3-compatible media artifact storage on `:9000`
 
 Python support is validated when a Python Code node can execute successfully.
+
+### Phase 1 media artifacts in MinIO
+
+Use MinIO as the S3-compatible artifact system of record. ComfyUI remains an
+internal generation service; do not treat protected ComfyUI `/view` URLs as
+human-download URLs.
+
+Default bucket:
+
+```bash
+MEDIA_ARTIFACT_S3_BUCKET=openclaw-media
+MEDIA_ARTIFACT_S3_PREFIX=generated/audio
+MEDIA_ARTIFACT_S3_ENDPOINT=http://100.73.253.62:9000
+MEDIA_ARTIFACT_S3_FORCE_PATH_STYLE=true
+```
+
+Recommended policy:
+
+- bucket stays private
+- media-worker gets a dedicated access key
+- allow object put/get only under `generated/audio/*`
+- generate presigned download URLs for delivery/UI use
+- keep MinIO root credentials for administration only
 
 ## Safe NAS Commands
 
