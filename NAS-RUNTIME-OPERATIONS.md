@@ -131,18 +131,22 @@ Default bucket:
 
 ```bash
 MEDIA_ARTIFACT_S3_BUCKET=openclaw-media
-MEDIA_ARTIFACT_S3_PREFIX=generated/audio
+MEDIA_ARTIFACT_S3_PREFIX=generated
 MEDIA_ARTIFACT_S3_ENDPOINT=http://100.73.253.62:9000
 MEDIA_ARTIFACT_S3_FORCE_PATH_STYLE=true
 ```
 
-`generated/audio` is the current Phase 1 namespace, not the whole artifact
-model. Keep the bucket layout media-type aware so image and video can be added
-without redesign:
+`generated` is the recommended base prefix. The worker appends the detected
+media type so image and video can be added without redesign:
 
 - `generated/audio/YYYY/MM/DD/<requestId>/<filename>`
 - `generated/image/YYYY/MM/DD/<requestId>/<filename>`
 - `generated/video/YYYY/MM/DD/<requestId>/<filename>`
+
+The current live audio-only deployment may still use the legacy
+`MEDIA_ARTIFACT_S3_PREFIX=generated/audio`; the worker treats an already
+media-specific prefix as compatible. Audio keys remain under `generated/audio`,
+while future image/video keys map to sibling prefixes.
 
 Recommended policy:
 
