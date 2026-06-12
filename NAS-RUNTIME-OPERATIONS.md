@@ -102,6 +102,14 @@ have to search for output media:
 - `metadata.profile` and `metadata.traceId`
 - `error` for failed jobs
 
+Live workflow source exports are versioned under:
+
+- `n8n/workflows/media/age17-music-generate-acestep-turbo-submit-v2.json`
+- `n8n/workflows/media/age17-music-generate-acestep-turbo-callback-v1.json`
+
+When patching these workflows through the live n8n UI or API, re-export them
+after validation so the repo remains the recovery/source reference.
+
 Expected services:
 
 - `n8n` exposes the task broker on `0.0.0.0:5679`
