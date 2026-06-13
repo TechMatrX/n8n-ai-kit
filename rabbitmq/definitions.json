@@ -1,0 +1,95 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "media.jobs",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "media.jobs.retry",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "media.jobs.dead",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "media.jobs.ready",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "media.jobs.dead",
+        "x-dead-letter-routing-key": "media.generate.dead"
+      }
+    },
+    {
+      "name": "media.jobs.retry.1m",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 60000,
+        "x-dead-letter-exchange": "media.jobs",
+        "x-dead-letter-routing-key": "media.generate"
+      }
+    },
+    {
+      "name": "media.jobs.dead",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "media.jobs",
+      "vhost": "/",
+      "destination": "media.jobs.ready",
+      "destination_type": "queue",
+      "routing_key": "media.generate",
+      "arguments": {}
+    },
+    {
+      "source": "media.jobs.retry",
+      "vhost": "/",
+      "destination": "media.jobs.retry.1m",
+      "destination_type": "queue",
+      "routing_key": "media.generate.retry.1m",
+      "arguments": {}
+    },
+    {
+      "source": "media.jobs.dead",
+      "vhost": "/",
+      "destination": "media.jobs.dead",
+      "destination_type": "queue",
+      "routing_key": "media.generate.dead",
+      "arguments": {}
+    }
+  ],
+  "policies": [],
+  "parameters": [],
+  "global_parameters": []
+}

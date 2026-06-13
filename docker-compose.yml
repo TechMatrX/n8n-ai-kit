@@ -2,6 +2,7 @@ volumes:
   n8n_storage:
   postgres_storage:
   minio_storage:
+  rabbitmq_storage:
   ollama_storage:
   qdrant_storage:
   open-webui:
@@ -45,6 +46,13 @@ x-n8n: &service-n8n
     - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
     - N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=false
     - OLLAMA_HOST=${OLLAMA_HOST:-ollama:11434}
+    - MEDIA_DISPATCH_MODE=${MEDIA_DISPATCH_MODE:-http}
+    - RABBITMQ_URL=${RABBITMQ_URL:-amqp://media_dispatch:change-me@rabbitmq:5672/}
+    - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE:-media.jobs}
+    - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-media.jobs.ready}
+    - RABBITMQ_RETRY_EXCHANGE=${RABBITMQ_RETRY_EXCHANGE:-media.jobs.retry}
+    - RABBITMQ_RETRY_QUEUE=${RABBITMQ_RETRY_QUEUE:-media.jobs.retry.1m}
+    - RABBITMQ_DEAD_QUEUE=${RABBITMQ_DEAD_QUEUE:-media.jobs.dead}
   env_file:
     - .env
   extra_hosts:
@@ -169,6 +177,29 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  rabbitmq:
+    image: ${RABBITMQ_IMAGE:-rabbitmq:3.13-management-alpine}
+    hostname: rabbitmq
+    container_name: rabbitmq
+    networks: ['demo']
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:?set RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:?set RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_DEFAULT_VHOST:-/}
+    ports:
+      - "${RABBITMQ_HOST_BIND:-127.0.0.1}:5672:5672"
+      - "${RABBITMQ_MANAGEMENT_HOST_BIND:-127.0.0.1}:15672:15672"
+    volumes:
+      - rabbitmq_storage:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   n8n-import:
     <<: *service-n8n

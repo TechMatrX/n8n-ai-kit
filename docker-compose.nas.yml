@@ -54,6 +54,10 @@ services:
     volumes:
       - ${NAS_ROOT:?set NAS_ROOT in .env}/minio:/data
 
+  rabbitmq:
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT in .env}/rabbitmq:/var/lib/rabbitmq
+
   n8n-import:
     environment:
       - WEBHOOK_URL=${WEBHOOK_URL:?set WEBHOOK_URL to your NAS URL}
