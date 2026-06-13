@@ -1,4 +1,5 @@
 .env
+.codebase-memory/
 backups/
 n8n/backup/credentials/*
 n8n/backup/workflows/*
