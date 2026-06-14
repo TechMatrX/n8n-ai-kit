@@ -1,0 +1,178 @@
+{
+  "name": "Media Worker Heartbeat Ingest v1",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Heartbeat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dev/media/worker-heartbeat-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "2",
+      "name": "Validate Heartbeat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const input = $input.first().json;\nconst headers = input.headers || {};\nconst body = input.body || {};\nconst expectedToken = ($env.MEDIA_WORKER_INGRESS_TOKEN || '').trim();\nconst providedToken = String(headers['x-media-worker-heartbeat-token'] || headers['X-Media-Worker-Heartbeat-Token'] || '').trim();\n\nif (!expectedToken || providedToken !== expectedToken) {\n  return [{ json: { route: 'error', responseCode: 401, ok: false, errorCode: 'UNAUTHORIZED', message: 'Unauthorized heartbeat publish' } }];\n}\n\nif (!body.workerId) {\n  return [{ json: { route: 'error', responseCode: 400, ok: false, errorCode: 'MISSING_WORKER_ID', message: 'workerId is required' } }];\n}\n\nconst heartbeatJson = body.heartbeatJson || JSON.stringify(body);\nconst row = {\n  route: 'accepted',\n  ok: true,\n  workerId: body.workerId,\n  status: body.status || 'unknown',\n  drain: Boolean(body.drain),\n  activeJobs: Number(body.activeJobs || 0),\n  maxConcurrentJobs: Number(body.maxConcurrentJobs || 0),\n  capacityAvailable: Boolean(body.capacityAvailable),\n  supportedMediaTypes: Array.isArray(body.supportedMediaTypes) ? body.supportedMediaTypes.join(',') : String(body.supportedMediaTypes || ''),\n  supportedProfiles: Array.isArray(body.supportedProfiles) ? body.supportedProfiles.join(',') : String(body.supportedProfiles || ''),\n  comfyReachable: Boolean(body.comfyReachable),\n  artifactStorageEnabled: Boolean(body.artifactStorageEnabled),\n  rabbitmqEnabled: Boolean(body.rabbitmqEnabled),\n  rabbitmqQueue: body.rabbitmqQueue || '',\n  heartbeatJson,\n  updatedAtIso: body.updatedAtIso || new Date().toISOString()\n};\n\nreturn [{ json: row }];"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Heartbeat Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [460, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "accepted",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "accepted",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "4",
+      "name": "Upsert Worker Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [700, -80],
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1zRtKHvsME9BgkO",
+          "mode": "list",
+          "cachedResultName": "MediaWorkers",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/V1zRtKHvsME9BgkO"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workerId": "={{ $json.workerId }}",
+            "status": "={{ $json.status }}",
+            "drain": "={{ $json.drain }}",
+            "activeJobs": "={{ $json.activeJobs }}",
+            "maxConcurrentJobs": "={{ $json.maxConcurrentJobs }}",
+            "capacityAvailable": "={{ $json.capacityAvailable }}",
+            "supportedMediaTypes": "={{ $json.supportedMediaTypes }}",
+            "supportedProfiles": "={{ $json.supportedProfiles }}",
+            "comfyReachable": "={{ $json.comfyReachable }}",
+            "artifactStorageEnabled": "={{ $json.artifactStorageEnabled }}",
+            "rabbitmqEnabled": "={{ $json.rabbitmqEnabled }}",
+            "rabbitmqQueue": "={{ $json.rabbitmqQueue }}",
+            "heartbeatJson": "={{ $json.heartbeatJson }}",
+            "updatedAtIso": "={{ $json.updatedAtIso }}"
+          },
+          "matchingColumns": ["workerId"],
+          "schema": [
+            {"id": "workerId", "displayName": "workerId", "required": false, "defaultMatch": true, "display": true, "type": "string", "readOnly": false, "removed": false},
+            {"id": "status", "displayName": "status", "required": false, "defaultMatch": false, "display": true, "type": "string", "readOnly": false, "removed": false},
+            {"id": "drain", "displayName": "drain", "required": false, "defaultMatch": false, "display": true, "type": "boolean", "readOnly": false, "removed": false},
+            {"id": "activeJobs", "displayName": "activeJobs", "required": false, "defaultMatch": false, "display": true, "type": "number", "readOnly": false, "removed": false},
+            {"id": "maxConcurrentJobs", "displayName": "maxConcurrentJobs", "required": false, "defaultMatch": false, "display": true, "type": "number", "readOnly": false, "removed": false},
+            {"id": "capacityAvailable", "displayName": "capacityAvailable", "required": false, "defaultMatch": false, "display": true, "type": "boolean", "readOnly": false, "removed": false},
+            {"id": "supportedMediaTypes", "displayName": "supportedMediaTypes", "required": false, "defaultMatch": false, "display": true, "type": "string", "readOnly": false, "removed": false},
+            {"id": "supportedProfiles", "displayName": "supportedProfiles", "required": false, "defaultMatch": false, "display": true, "type": "string", "readOnly": false, "removed": false},
+            {"id": "comfyReachable", "displayName": "comfyReachable", "required": false, "defaultMatch": false, "display": true, "type": "boolean", "readOnly": false, "removed": false},
+            {"id": "artifactStorageEnabled", "displayName": "artifactStorageEnabled", "required": false, "defaultMatch": false, "display": true, "type": "boolean", "readOnly": false, "removed": false},
+            {"id": "rabbitmqEnabled", "displayName": "rabbitmqEnabled", "required": false, "defaultMatch": false, "display": true, "type": "boolean", "readOnly": false, "removed": false},
+            {"id": "rabbitmqQueue", "displayName": "rabbitmqQueue", "required": false, "defaultMatch": false, "display": true, "type": "string", "readOnly": false, "removed": false},
+            {"id": "heartbeatJson", "displayName": "heartbeatJson", "required": false, "defaultMatch": false, "display": true, "type": "string", "readOnly": false, "removed": false},
+            {"id": "updatedAtIso", "displayName": "updatedAtIso", "required": false, "defaultMatch": false, "display": true, "type": "date", "readOnly": false, "removed": false}
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": false
+        },
+        "options": {},
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "workerId",
+              "keyValue": "={{ $json.workerId }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5",
+      "name": "Respond Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [940, -80],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ ok: true, workerId: $json.workerId, updatedAtIso: $json.updatedAtIso }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "6",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [700, 120],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ ok: false, errorCode: $json.errorCode, message: $json.message }) }}",
+        "options": {
+          "responseCode": "={{ $json.responseCode || 500 }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Heartbeat Webhook": {
+      "main": [[{"node": "Validate Heartbeat", "type": "main", "index": 0}]]
+    },
+    "Validate Heartbeat": {
+      "main": [[{"node": "Heartbeat Valid?", "type": "main", "index": 0}]]
+    },
+    "Heartbeat Valid?": {
+      "main": [
+        [{"node": "Upsert Worker Row", "type": "main", "index": 0}],
+        [{"node": "Respond Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Upsert Worker Row": {
+      "main": [[{"node": "Respond Accepted", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none"
+  }
+}
