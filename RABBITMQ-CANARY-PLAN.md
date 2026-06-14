@@ -92,7 +92,9 @@ An inactive guarded workflow is staged for future approval:
 - source file: `n8n/workflows/media/media-rabbitmq-canary-submit-v1-disabled.json`
 - active state: `false`
 - webhook path: `dev/media/rabbitmq-canary-submit-v1`
-- current behavior: guard-only response path; no RabbitMQ publish node
+- current behavior: inactive guarded canary path with a staged RabbitMQ publish node
+- publish target: exchange `media.jobs`, routing key `media.generate`
+- canary message: one `acestep_turbo` job with a 15-second Comfy workflow payload
 
 The guard returns blocked unless all are true:
 
@@ -100,8 +102,8 @@ The guard returns blocked unless all are true:
 - request `canaryToken` matches `MEDIA_RABBITMQ_CANARY_TOKEN`
 - request `confirm` equals `rabbitmq-canary-approved`
 
-Even when the guard passes, the staged workflow returns `publishDisabled=true`.
-It is intentionally not a RabbitMQ publisher yet.
+The workflow remains inactive. The RabbitMQ publish node can only run after the
+workflow is explicitly activated and a request passes all guards above.
 
 ## Canary Enablement Sequence
 
@@ -114,8 +116,8 @@ Only execute after explicit approval.
    - keep `RABBITMQ_PREFETCH=1`
    - restart `media-worker-daemon`
    - confirm `/readyz` remains healthy
-4. Replace or extend the disabled canary workflow with the RabbitMQ publish node,
-   leaving Submit v2 untouched for the first canary.
+4. Confirm the disabled canary workflow still contains only the guarded canary
+   publish path, leaving Submit v2 untouched.
 5. Switch only the canary runtime path to:
    - `MEDIA_DISPATCH_MODE=rabbitmq`
 6. Submit one canary request.

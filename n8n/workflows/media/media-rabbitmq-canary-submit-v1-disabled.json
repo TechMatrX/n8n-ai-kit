@@ -13,19 +13,25 @@
       "name": "Canary Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [272, 304],
+      "position": [
+        272,
+        304
+      ],
       "webhookId": "dev-media-rabbitmq-canary-submit-v1",
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const source = $input.first().json.body ?? $input.first().json;\nconst enabled = String($env.MEDIA_RABBITMQ_CANARY_ENABLED || 'false').trim().toLowerCase() === 'true';\nconst expectedToken = String($env.MEDIA_RABBITMQ_CANARY_TOKEN || '').trim();\nconst providedToken = String(source.canaryToken || '').trim();\nconst requestId = typeof source.requestId === 'string' && source.requestId.trim()\n  ? source.requestId.trim()\n  : `req-rabbitmq-canary-${Date.now()}`;\n\nif (!enabled) {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 423,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_DISABLED',\n    message: 'RabbitMQ canary workflow is staged but disabled. Set MEDIA_RABBITMQ_CANARY_ENABLED=true only after explicit approval.'\n  } }];\n}\n\nif (!expectedToken || providedToken !== expectedToken) {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 403,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_UNAUTHORIZED',\n    message: 'RabbitMQ canary token is missing or invalid.'\n  } }];\n}\n\nif (source.confirm !== 'rabbitmq-canary-approved') {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 400,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_CONFIRMATION_REQUIRED',\n    message: 'Set confirm to rabbitmq-canary-approved for a canary request.'\n  } }];\n}\n\nreturn [{ json: {\n  route: 'ready',\n  responseCode: 202,\n  requestId,\n  ok: true,\n  status: 'ready',\n  canaryOnly: true,\n  publishDisabled: true,\n  dispatchMode: 'rabbitmq',\n  profile: 'acestep_turbo',\n  duration: 15,\n  count: 1,\n  message: 'RabbitMQ canary guard passed. Publish path is intentionally disabled in this staged workflow.'\n} }];"
+        "jsCode": "const source = $input.first().json.body ?? $input.first().json;\nconst enabled = String($env.MEDIA_RABBITMQ_CANARY_ENABLED || 'false').trim().toLowerCase() === 'true';\nconst expectedToken = String($env.MEDIA_RABBITMQ_CANARY_TOKEN || '').trim();\nconst providedToken = String(source.canaryToken || '').trim();\nconst requestId = typeof source.requestId === 'string' && source.requestId.trim()\n  ? source.requestId.trim()\n  : `req-rabbitmq-canary-${Date.now()}`;\n\nif (!enabled) {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 423,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_DISABLED',\n    message: 'RabbitMQ canary workflow is staged but disabled. Set MEDIA_RABBITMQ_CANARY_ENABLED=true only after explicit approval.'\n  } }];\n}\n\nif (!expectedToken || providedToken !== expectedToken) {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 403,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_UNAUTHORIZED',\n    message: 'RabbitMQ canary token is missing or invalid.'\n  } }];\n}\n\nif (source.confirm !== 'rabbitmq-canary-approved') {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 400,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_CONFIRMATION_REQUIRED',\n    message: 'Set confirm to rabbitmq-canary-approved for a canary request.'\n  } }];\n}\n\nconst duration = 15;\nconst bpm = 90;\nconst seed = Number.isInteger(source.seed) ? source.seed : Date.now();\nconst tags = typeof source.tags === 'string' && source.tags.trim()\n  ? source.tags.trim()\n  : 'short cinematic electronic canary test, clean mix';\nconst lyrics = typeof source.lyrics === 'string' ? source.lyrics : '';\nconst language = typeof source.language === 'string' && source.language.trim() ? source.language.trim() : 'en';\nconst keyscale = typeof source.keyscale === 'string' && source.keyscale.trim() ? source.keyscale.trim() : 'C major';\nconst timesignature = typeof source.timesignature === 'string' && source.timesignature.trim() ? source.timesignature.trim() : '4';\nconst traceId = typeof source?.metadata?.traceId === 'string' && source.metadata.traceId\n  ? source.metadata.traceId\n  : `trace-${requestId}`;\n\nconst comfyWorkflow = {\n  '97': { inputs: { ckpt_name: 'ace_step_1.5_turbo_aio.safetensors' }, class_type: 'CheckpointLoaderSimple', _meta: { title: 'Load Checkpoint' } },\n  '94': { inputs: { tags, lyrics, seed, bpm, duration, timesignature, language, keyscale, generate_audio_codes: true, cfg_scale: 3, temperature: 0.75, top_p: 0.9, top_k: 0, min_p: 0, clip: ['97', 1] }, class_type: 'TextEncodeAceStepAudio1.5', _meta: { title: 'TextEncodeAceStepAudio1.5' } },\n  '78': { inputs: { shift: 3, model: ['97', 0] }, class_type: 'ModelSamplingAuraFlow', _meta: { title: 'ModelSamplingAuraFlow' } },\n  '18': { inputs: { samples: ['3', 0], vae: ['97', 2] }, class_type: 'VAEDecodeAudio', _meta: { title: 'VAE Decode Audio' } },\n  '98': { inputs: { seconds: duration, batch_size: 1 }, class_type: 'EmptyAceStep1.5LatentAudio', _meta: { title: 'Empty Ace Step 1.5 Latent Audio' } },\n  '3': { inputs: { seed, steps: 15, cfg: 3, sampler_name: 'euler', scheduler: 'simple', denoise: 1, model: ['78', 0], positive: ['94', 0], negative: ['47', 0], latent_image: ['98', 0] }, class_type: 'KSampler', _meta: { title: 'KSampler' } },\n  '104': { inputs: { filename_prefix: 'audio/rabbitmq-canary', quality: 'V0', audio: ['18', 0] }, class_type: 'SaveAudioMP3', _meta: { title: 'Save Audio (MP3)' } },\n  '47': { inputs: { conditioning: ['94', 0] }, class_type: 'ConditioningZeroOut', _meta: { title: 'ConditioningZeroOut' } }\n};\n\nreturn [{ json: {\n  route: 'ready',\n  responseCode: 202,\n  requestId,\n  ok: true,\n  status: 'ready',\n  canaryOnly: true,\n  publishDisabled: false,\n  dispatchMode: 'rabbitmq',\n  profile: 'acestep_turbo',\n  duration,\n  count: 1,\n  tags,\n  lyrics,\n  bpm,\n  language,\n  keyscale,\n  timesignature,\n  workflowFile: 'music/audio_ace_step_1_5_balanced.json',\n  comfyWorkflow,\n  metadata: { source: 'openclaw-rabbitmq-canary', traceId },\n  message: 'RabbitMQ canary guard passed. A single canary message will be published if the workflow is explicitly activated and invoked.'\n} }];"
       },
       "id": "2",
       "name": "Canary Guard",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [528, 304]
+      "position": [
+        528,
+        304
+      ]
     },
     {
       "parameters": {
@@ -55,7 +61,10 @@
       "name": "Canary Ready?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [768, 304]
+      "position": [
+        768,
+        304
+      ]
     },
     {
       "parameters": {
@@ -69,21 +78,69 @@
       "name": "Respond Blocked",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [1008, 416]
+      "position": [
+        1008,
+        416
+      ]
     },
     {
+      "id": "6",
+      "name": "Build Canary RabbitMQ Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        192
+      ],
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ ({ requestId: $json.requestId, ok: $json.ok, status: $json.status, canaryOnly: $json.canaryOnly, publishDisabled: $json.publishDisabled, dispatchMode: $json.dispatchMode, profile: $json.profile, duration: $json.duration, count: $json.count, message: $json.message }) }}",
+        "jsCode": "const item = $input.first().json;\nconst nowMs = Date.now();\nconst suffix = Math.random().toString(36).slice(2, 8);\nconst jobId = `job_rabbitmq_canary_${nowMs}_${suffix}`;\nconst messageId = `msg_rabbitmq_canary_${nowMs}_${suffix}`;\nconst acceptedAt = $now.toISO();\nconst rabbitmqMessage = {\n  version: 1,\n  messageId,\n  requestId: item.requestId,\n  jobId,\n  profile: item.profile,\n  payload: {\n    workflow: item.comfyWorkflow,\n    workflowFile: item.workflowFile,\n    metadata: {\n      ...(item.metadata || {}),\n      canaryOnly: true,\n      acceptedAt\n    }\n  }\n};\nreturn [{ json: {\n  ...item,\n  jobId,\n  brokerMessageId: messageId,\n  acceptedAt,\n  rabbitmqExchange: 'media.jobs',\n  rabbitmqRoutingKey: 'media.generate',\n  rabbitmqMessage,\n  route: 'publish'\n} }];"
+      }
+    },
+    {
+      "id": "7",
+      "name": "Publish RabbitMQ Canary Job",
+      "type": "n8n-nodes-base.rabbitmq",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        192
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "mode": "exchange",
+        "exchange": "media.jobs",
+        "exchangeType": "direct",
+        "routingKey": "media.generate",
+        "sendInputData": false,
+        "message": "={{ JSON.stringify($json.rabbitmqMessage) }}",
         "options": {
-          "responseCode": "={{ $json.responseCode || 202 }}"
+          "durable": true
         }
       },
-      "id": "5",
-      "name": "Respond Ready Staged",
+      "credentials": {
+        "rabbitmq": {
+          "id": "zO5dVYTY7UWoUzU9",
+          "name": "RabbitMQ - Media Dispatch NAS"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "8",
+      "name": "Respond Canary Published",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [1008, 192]
+      "position": [
+        1488,
+        192
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ requestId: $(\"Build Canary RabbitMQ Message\").first().json.requestId, ok: true, status: \"queued\", canaryOnly: true, dispatchMode: \"rabbitmq\", jobId: $(\"Build Canary RabbitMQ Message\").first().json.jobId, brokerMessageId: $(\"Build Canary RabbitMQ Message\").first().json.brokerMessageId, exchange: $(\"Build Canary RabbitMQ Message\").first().json.rabbitmqExchange, routingKey: $(\"Build Canary RabbitMQ Message\").first().json.rabbitmqRoutingKey, message: \"RabbitMQ canary message published.\" }) }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
     }
   ],
   "connections": {
@@ -113,7 +170,7 @@
       "main": [
         [
           {
-            "node": "Respond Ready Staged",
+            "node": "Build Canary RabbitMQ Message",
             "type": "main",
             "index": 0
           }
@@ -121,6 +178,28 @@
         [
           {
             "node": "Respond Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Canary RabbitMQ Message": {
+      "main": [
+        [
+          {
+            "node": "Publish RabbitMQ Canary Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish RabbitMQ Canary Job": {
+      "main": [
+        [
+          {
+            "node": "Respond Canary Published",
             "type": "main",
             "index": 0
           }
