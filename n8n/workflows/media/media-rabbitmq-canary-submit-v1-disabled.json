@@ -1,0 +1,134 @@
+{
+  "name": "AGE17 Dev - RabbitMQ Canary Submit v1 (Disabled)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dev/media/rabbitmq-canary-submit-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Canary Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [272, 304],
+      "webhookId": "dev-media-rabbitmq-canary-submit-v1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first().json.body ?? $input.first().json;\nconst enabled = String($env.MEDIA_RABBITMQ_CANARY_ENABLED || 'false').trim().toLowerCase() === 'true';\nconst expectedToken = String($env.MEDIA_RABBITMQ_CANARY_TOKEN || '').trim();\nconst providedToken = String(source.canaryToken || '').trim();\nconst requestId = typeof source.requestId === 'string' && source.requestId.trim()\n  ? source.requestId.trim()\n  : `req-rabbitmq-canary-${Date.now()}`;\n\nif (!enabled) {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 423,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_DISABLED',\n    message: 'RabbitMQ canary workflow is staged but disabled. Set MEDIA_RABBITMQ_CANARY_ENABLED=true only after explicit approval.'\n  } }];\n}\n\nif (!expectedToken || providedToken !== expectedToken) {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 403,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_UNAUTHORIZED',\n    message: 'RabbitMQ canary token is missing or invalid.'\n  } }];\n}\n\nif (source.confirm !== 'rabbitmq-canary-approved') {\n  return [{ json: {\n    route: 'blocked',\n    responseCode: 400,\n    requestId,\n    ok: false,\n    status: 'blocked',\n    errorCode: 'RABBITMQ_CANARY_CONFIRMATION_REQUIRED',\n    message: 'Set confirm to rabbitmq-canary-approved for a canary request.'\n  } }];\n}\n\nreturn [{ json: {\n  route: 'ready',\n  responseCode: 202,\n  requestId,\n  ok: true,\n  status: 'ready',\n  canaryOnly: true,\n  publishDisabled: true,\n  dispatchMode: 'rabbitmq',\n  profile: 'acestep_turbo',\n  duration: 15,\n  count: 1,\n  message: 'RabbitMQ canary guard passed. Publish path is intentionally disabled in this staged workflow.'\n} }];"
+      },
+      "id": "2",
+      "name": "Canary Guard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [528, 304]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-canary-ready",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "ready"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "Canary Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [768, 304]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ requestId: $json.requestId, ok: $json.ok, status: $json.status, errorCode: $json.errorCode, message: $json.message }) }}",
+        "options": {
+          "responseCode": "={{ $json.responseCode || 423 }}"
+        }
+      },
+      "id": "4",
+      "name": "Respond Blocked",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1008, 416]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ requestId: $json.requestId, ok: $json.ok, status: $json.status, canaryOnly: $json.canaryOnly, publishDisabled: $json.publishDisabled, dispatchMode: $json.dispatchMode, profile: $json.profile, duration: $json.duration, count: $json.count, message: $json.message }) }}",
+        "options": {
+          "responseCode": "={{ $json.responseCode || 202 }}"
+        }
+      },
+      "id": "5",
+      "name": "Respond Ready Staged",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1008, 192]
+    }
+  ],
+  "connections": {
+    "Canary Webhook": {
+      "main": [
+        [
+          {
+            "node": "Canary Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Canary Guard": {
+      "main": [
+        [
+          {
+            "node": "Canary Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Canary Ready?": {
+      "main": [
+        [
+          {
+            "node": "Respond Ready Staged",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

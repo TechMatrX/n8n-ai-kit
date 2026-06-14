@@ -5,6 +5,7 @@ Status: staged plan only. Do not enable until Andy explicitly approves.
 ## Current Safe State
 
 - Submit v2 workflow: `ma2PY9x1YIcNlEBm`
+- Disabled canary workflow: `CmgTVKYeHMPpVyNH`
 - Default runtime path: HTTP dispatch to selected worker
 - Required guardrail: `MEDIA_DISPATCH_MODE=http`
 - RabbitMQ queues must remain empty before and after every pre-canary check:
@@ -83,6 +84,25 @@ The first canary must be a single low-cost audio job:
 
 The canary is not a full cutover. It is one controlled RabbitMQ dispatch test.
 
+## Disabled Canary Workflow
+
+An inactive guarded workflow is staged for future approval:
+
+- n8n workflow: `CmgTVKYeHMPpVyNH`
+- source file: `n8n/workflows/media/media-rabbitmq-canary-submit-v1-disabled.json`
+- active state: `false`
+- webhook path: `dev/media/rabbitmq-canary-submit-v1`
+- current behavior: guard-only response path; no RabbitMQ publish node
+
+The guard returns blocked unless all are true:
+
+- `MEDIA_RABBITMQ_CANARY_ENABLED=true`
+- request `canaryToken` matches `MEDIA_RABBITMQ_CANARY_TOKEN`
+- request `confirm` equals `rabbitmq-canary-approved`
+
+Even when the guard passes, the staged workflow returns `publishDisabled=true`.
+It is intentionally not a RabbitMQ publisher yet.
+
 ## Canary Enablement Sequence
 
 Only execute after explicit approval.
@@ -94,10 +114,12 @@ Only execute after explicit approval.
    - keep `RABBITMQ_PREFETCH=1`
    - restart `media-worker-daemon`
    - confirm `/readyz` remains healthy
-4. Switch only the n8n Submit v2 runtime to:
+4. Replace or extend the disabled canary workflow with the RabbitMQ publish node,
+   leaving Submit v2 untouched for the first canary.
+5. Switch only the canary runtime path to:
    - `MEDIA_DISPATCH_MODE=rabbitmq`
-5. Submit one canary request.
-6. Watch these checkpoints:
+6. Submit one canary request.
+7. Watch these checkpoints:
    - Submit v2 returns `202`
    - `media.jobs.ready` depth increases briefly
    - worker consumes the message
