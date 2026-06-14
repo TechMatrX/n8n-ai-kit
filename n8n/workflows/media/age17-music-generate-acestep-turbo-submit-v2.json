@@ -1,8 +1,8 @@
 {
   "_openclawExport": {
-    "exportedAt": "2026-06-12T10:42:28.730Z",
-    "source": "n8n_get_workflow",
-    "purpose": "Version live Phase 1 media workflow definitions from n8n",
+    "exportedAt": "2026-06-14T04:08:16.074Z",
+    "source": "n8n_get_workflow + local structured patch",
+    "purpose": "Version live Submit v2 registry-driven worker readiness gate",
     "workflowId": "ma2PY9x1YIcNlEBm",
     "workflowName": "AGE17 Dev - Music Generate acestep_turbo Submit v2",
     "activeAtExport": true,
@@ -89,8 +89,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2128,
-        528
+        3040,
+        640
       ]
     },
     {
@@ -214,8 +214,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1808,
-        384
+        2640,
+        496
       ],
       "credentials": {
         "httpCustomAuth": {
@@ -234,8 +234,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1808,
-        192
+        2640,
+        304
       ]
     },
     {
@@ -267,8 +267,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2000,
-        384
+        2832,
+        496
       ]
     },
     {
@@ -363,8 +363,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2208,
-        304
+        3040,
+        416
       ]
     },
     {
@@ -380,22 +380,100 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2400,
-        304
+        3264,
+        416
       ]
     },
     {
       "parameters": {
-        "jsCode": "const item = $('Validate and Build Workflow').first().json;\nconst workerBaseUrl = (($env.MEDIA_WORKER_BASE_URL || 'https://media-worker.techmatrx.com').trim()).replace(/\\/+$/, '');\nconst ingressToken = ($env.MEDIA_WORKER_INGRESS_TOKEN || '').trim();\nif (!workerBaseUrl) {\n  return [{ json: {\n    requestId: item.requestId,\n    status: 'failed',\n    stage: 'dispatch',\n    errorCode: 'MEDIA_WORKER_BASE_URL_NOT_CONFIGURED',\n    message: 'MEDIA_WORKER_BASE_URL is not configured in n8n',\n    responseCode: 500,\n    route: 'error',\n    metadata: { traceId: item?.metadata?.traceId }\n  } }];\n}\nif (!ingressToken) {\n  return [{ json: {\n    requestId: item.requestId,\n    status: 'failed',\n    stage: 'dispatch',\n    errorCode: 'MEDIA_WORKER_INGRESS_TOKEN_NOT_CONFIGURED',\n    message: 'MEDIA_WORKER_INGRESS_TOKEN is not configured in n8n',\n    responseCode: 500,\n    route: 'error',\n    metadata: { traceId: item?.metadata?.traceId }\n  } }];\n}\nconst jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;\nconst acceptedAt = $now.toISO();\nconst payloadJson = JSON.stringify({\n  profile: item.profile,\n  count: item.count,\n  tags: item.tags,\n  lyrics: item.lyrics,\n  bpm: item.bpm,\n  duration: item.duration,\n  language: item.language,\n  keyscale: item.keyscale,\n  timesignature: item.timesignature,\n  metadata: item.metadata,\n  workflowFile: item.workflowFile\n});\nconst resultJson = JSON.stringify({\n  provider: 'media-worker-daemon',\n  traceId: item?.metadata?.traceId,\n  acceptedAt,\n  status: 'queued'\n});\nreturn [{ json: {\n  ...item,\n  jobId,\n  acceptedAt,\n  payloadJson,\n  resultJson,\n  dispatchUrl: `${workerBaseUrl}/jobs`,\n  workerDispatchBody: {\n    jobId,\n    requestId: item.requestId,\n    profile: item.profile,\n    payload: {\n      workflow: item.comfyWorkflow,\n      workflowFile: item.workflowFile,\n      metadata: item.metadata\n    }\n  },\n  route: 'continue'\n} }];"
+        "jsCode": "const item = $input.first().json;\nconst workerBaseUrl = (($env.MEDIA_WORKER_BASE_URL || 'https://media-worker.techmatrx.com').trim()).replace(/\\/+$/, '');\nconst ingressToken = ($env.MEDIA_WORKER_INGRESS_TOKEN || '').trim();\nif (!workerBaseUrl) {\n  return [{ json: {\n    requestId: item.requestId,\n    status: 'failed',\n    stage: 'dispatch',\n    errorCode: 'MEDIA_WORKER_BASE_URL_NOT_CONFIGURED',\n    message: 'MEDIA_WORKER_BASE_URL is not configured in n8n',\n    responseCode: 500,\n    route: 'error',\n    metadata: { traceId: item?.metadata?.traceId }\n  } }];\n}\nif (!ingressToken) {\n  return [{ json: {\n    requestId: item.requestId,\n    status: 'failed',\n    stage: 'dispatch',\n    errorCode: 'MEDIA_WORKER_INGRESS_TOKEN_NOT_CONFIGURED',\n    message: 'MEDIA_WORKER_INGRESS_TOKEN is not configured in n8n',\n    responseCode: 500,\n    route: 'error',\n    metadata: { traceId: item?.metadata?.traceId }\n  } }];\n}\nconst jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;\nconst acceptedAt = $now.toISO();\nconst payloadJson = JSON.stringify({\n  profile: item.profile,\n  count: item.count,\n  tags: item.tags,\n  lyrics: item.lyrics,\n  bpm: item.bpm,\n  duration: item.duration,\n  language: item.language,\n  keyscale: item.keyscale,\n  timesignature: item.timesignature,\n  metadata: item.metadata,\n  workflowFile: item.workflowFile\n});\nconst resultJson = JSON.stringify({\n  provider: 'media-worker-daemon',\n  traceId: item?.metadata?.traceId,\n  acceptedAt,\n  status: 'queued'\n});\nreturn [{ json: {\n  ...item,\n  jobId,\n  acceptedAt,\n  payloadJson,\n  resultJson,\n  dispatchUrl: `${workerBaseUrl}/jobs`,\n  workerDispatchBody: {\n    jobId,\n    requestId: item.requestId,\n    profile: item.profile,\n    payload: {\n      workflow: item.comfyWorkflow,\n      workflowFile: item.workflowFile,\n      metadata: item.metadata\n    }\n  },\n  route: 'continue'\n} }];"
       },
       "id": "20",
       "name": "Prepare Worker Dispatch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1584,
+        2224,
         384
       ]
+    },
+    {
+      "id": "27",
+      "name": "Load Ready Workers",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        384
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1zRtKHvsME9BgkO",
+          "mode": "list",
+          "cachedResultName": "MediaWorkers",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/V1zRtKHvsME9BgkO"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "keyValue": "ok"
+            }
+          ]
+        },
+        "limit": 20
+      }
+    },
+    {
+      "id": "28",
+      "name": "Select Ready Worker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        384
+      ],
+      "parameters": {
+        "jsCode": "const request = $('Validate and Build Workflow').first().json;\nconst now = Date.now();\nconst maxAgeMs = Number($env.MEDIA_WORKER_HEARTBEAT_MAX_AGE_MS || 180000);\nconst requiredMediaType = 'audio';\nconst requiredProfile = request.profile || 'acestep_turbo';\n\nfunction list(value) {\n  return String(value || '')\n    .split(',')\n    .map((entry) => entry.trim())\n    .filter(Boolean);\n}\n\nfunction isFresh(worker) {\n  const updatedAt = Date.parse(worker.updatedAtIso || worker.updatedAt || worker.createdAt || '');\n  return Number.isFinite(updatedAt) && now - updatedAt <= maxAgeMs;\n}\n\nconst workers = $input.all()\n  .map((item) => item.json || {})\n  .filter((worker) => worker.workerId)\n  .filter((worker) => worker.status === 'ok')\n  .filter((worker) => !worker.drain)\n  .filter((worker) => Boolean(worker.capacityAvailable))\n  .filter((worker) => Number(worker.activeJobs || 0) < Number(worker.maxConcurrentJobs || 0))\n  .filter((worker) => Boolean(worker.comfyReachable))\n  .filter((worker) => list(worker.supportedMediaTypes).includes(requiredMediaType))\n  .filter((worker) => list(worker.supportedProfiles).includes(requiredProfile))\n  .filter(isFresh)\n  .sort((a, b) => Number(a.activeJobs || 0) - Number(b.activeJobs || 0));\n\nconst selectedWorker = workers[0];\nif (!selectedWorker) {\n  return [{ json: {\n    ...request,\n    status: 'failed',\n    stage: 'worker_selection',\n    errorCode: 'NO_READY_WORKER',\n    message: 'No ready media worker is available for this request',\n    responseCode: 503,\n    route: 'error',\n    workerSelection: {\n      requiredMediaType,\n      requiredProfile,\n      maxAgeMs,\n      observedWorkers: $input.all().map((item) => ({\n        workerId: item.json?.workerId,\n        status: item.json?.status,\n        drain: item.json?.drain,\n        activeJobs: item.json?.activeJobs,\n        maxConcurrentJobs: item.json?.maxConcurrentJobs,\n        capacityAvailable: item.json?.capacityAvailable,\n        comfyReachable: item.json?.comfyReachable,\n        updatedAtIso: item.json?.updatedAtIso\n      }))\n    },\n    metadata: request.metadata\n  } }];\n}\n\nreturn [{ json: {\n  ...request,\n  route: 'continue',\n  selectedWorker: {\n    workerId: selectedWorker.workerId,\n    status: selectedWorker.status,\n    activeJobs: selectedWorker.activeJobs,\n    maxConcurrentJobs: selectedWorker.maxConcurrentJobs,\n    updatedAtIso: selectedWorker.updatedAtIso,\n    rabbitmqEnabled: selectedWorker.rabbitmqEnabled,\n    rabbitmqQueue: selectedWorker.rabbitmqQueue\n  }\n} }];"
+      }
+    },
+    {
+      "id": "29",
+      "name": "Worker Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        384
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-worker-ready",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "continue",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -472,7 +550,7 @@
         ],
         [
           {
-            "node": "Prepare Worker Dispatch",
+            "node": "Load Ready Workers",
             "type": "main",
             "index": 0
           }
@@ -535,6 +613,46 @@
         [
           {
             "node": "Dispatch To Worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Ready Workers": {
+      "main": [
+        [
+          {
+            "node": "Select Ready Worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Ready Worker": {
+      "main": [
+        [
+          {
+            "node": "Worker Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker Ready?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Worker Dispatch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
             "type": "main",
             "index": 0
           }
