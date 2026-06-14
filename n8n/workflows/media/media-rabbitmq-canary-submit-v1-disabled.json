@@ -93,7 +93,7 @@
         192
       ],
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst nowMs = Date.now();\nconst suffix = Math.random().toString(36).slice(2, 8);\nconst jobId = `job_rabbitmq_canary_${nowMs}_${suffix}`;\nconst messageId = `msg_rabbitmq_canary_${nowMs}_${suffix}`;\nconst acceptedAt = $now.toISO();\nconst rabbitmqMessage = {\n  version: 1,\n  messageId,\n  requestId: item.requestId,\n  jobId,\n  profile: item.profile,\n  payload: {\n    workflow: item.comfyWorkflow,\n    workflowFile: item.workflowFile,\n    metadata: {\n      ...(item.metadata || {}),\n      canaryOnly: true,\n      acceptedAt\n    }\n  }\n};\nreturn [{ json: {\n  ...item,\n  jobId,\n  brokerMessageId: messageId,\n  acceptedAt,\n  rabbitmqExchange: 'media.jobs',\n  rabbitmqRoutingKey: 'media.generate',\n  rabbitmqMessage,\n  route: 'publish'\n} }];"
+        "jsCode": "const item = $input.first().json;\nconst nowMs = Date.now();\nconst suffix = Math.random().toString(36).slice(2, 8);\nconst jobId = `job_rabbitmq_canary_${nowMs}_${suffix}`;\nconst messageId = `msg_rabbitmq_canary_${nowMs}_${suffix}`;\nconst acceptedAt = $now.toISO();\nconst payloadJson = JSON.stringify({\n  profile: item.profile,\n  count: item.count,\n  tags: item.tags,\n  lyrics: item.lyrics,\n  bpm: item.bpm,\n  duration: item.duration,\n  language: item.language,\n  keyscale: item.keyscale,\n  timesignature: item.timesignature,\n  metadata: item.metadata,\n  workflowFile: item.workflowFile,\n  dispatchMode: 'rabbitmq',\n  brokerMessageId: messageId,\n  canaryOnly: true\n});\nconst resultJson = JSON.stringify({\n  provider: 'media-worker-daemon',\n  traceId: item?.metadata?.traceId,\n  acceptedAt,\n  status: 'queued',\n  dispatchMode: 'rabbitmq',\n  canaryOnly: true,\n  rabbitmq: {\n    exchange: 'media.jobs',\n    routingKey: 'media.generate',\n    brokerMessageId: messageId\n  }\n});\nconst rabbitmqMessage = {\n  version: 1,\n  messageId,\n  requestId: item.requestId,\n  jobId,\n  profile: item.profile,\n  payload: {\n    workflow: item.comfyWorkflow,\n    workflowFile: item.workflowFile,\n    metadata: {\n      ...(item.metadata || {}),\n      canaryOnly: true,\n      acceptedAt,\n      brokerMessageId: messageId\n    }\n  }\n};\nreturn [{ json: {\n  ...item,\n  jobId,\n  brokerMessageId: messageId,\n  acceptedAt,\n  status: 'queued',\n  updatedAtIso: acceptedAt,\n  payloadJson,\n  resultJson,\n  rabbitmqExchange: 'media.jobs',\n  rabbitmqRoutingKey: 'media.generate',\n  rabbitmqMessage,\n  route: 'publish'\n} }];"
       }
     },
     {
@@ -102,7 +102,7 @@
       "type": "n8n-nodes-base.rabbitmq",
       "typeVersion": 1.1,
       "position": [
-        1248,
+        1488,
         192
       ],
       "parameters": {
@@ -112,7 +112,7 @@
         "exchangeType": "direct",
         "routingKey": "media.generate",
         "sendInputData": false,
-        "message": "={{ JSON.stringify($json.rabbitmqMessage) }}",
+        "message": "={{ JSON.stringify($(\"Build Canary RabbitMQ Message\").first().json.rabbitmqMessage) }}",
         "options": {
           "durable": true
         }
@@ -131,7 +131,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1488,
+        1728,
         192
       ],
       "parameters": {
@@ -140,6 +140,102 @@
         "options": {
           "responseCode": 202
         }
+      }
+    },
+    {
+      "id": "9",
+      "name": "Create Canary Job Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        192
+      ],
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SPGOyAFf0KBfcgp4",
+          "mode": "list",
+          "cachedResultName": "MediaPhase1Jobs",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/SPGOyAFf0KBfcgp4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "requestId": "={{ $json.requestId }}",
+            "jobId": "={{ $json.jobId }}",
+            "status": "={{ $json.status }}",
+            "payloadJson": "={{ $json.payloadJson }}",
+            "resultJson": "={{ $json.resultJson }}",
+            "updatedAtIso": "={{ $json.updatedAtIso }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "requestId",
+              "displayName": "requestId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "jobId",
+              "displayName": "jobId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payloadJson",
+              "displayName": "payloadJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "resultJson",
+              "displayName": "resultJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updatedAtIso",
+              "displayName": "updatedAtIso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
       }
     }
   ],
@@ -188,7 +284,7 @@
       "main": [
         [
           {
-            "node": "Publish RabbitMQ Canary Job",
+            "node": "Create Canary Job Row",
             "type": "main",
             "index": 0
           }
@@ -200,6 +296,17 @@
         [
           {
             "node": "Respond Canary Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Canary Job Row": {
+      "main": [
+        [
+          {
+            "node": "Publish RabbitMQ Canary Job",
             "type": "main",
             "index": 0
           }
