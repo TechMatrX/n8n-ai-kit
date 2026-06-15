@@ -25,6 +25,32 @@ Validation evidence:
 - worker returned ready with zero active/resumable jobs
 - ready, retry, and dead-letter queues remained empty
 
+Origin-aware completion routing was added on 2026-06-15 before Stage 2:
+
+- Submit v2 accepts a `delivery` envelope and persists it under job metadata.
+- The worker stores that metadata durably and returns `delivery` in its
+  completion callback.
+- The OpenClaw media-completion plugin routes Telegram completions by
+  `accountId`, `target`, `threadId`, and optional `replyTo`.
+- Web TUI/webchat completions are injected into the originating `sessionKey`.
+- Missing delivery metadata falls back to the configured Andy DM and is logged
+  with `deliverySource=fallback`.
+
+Delivery envelope:
+
+```json
+{
+  "sessionKey": "agent:andy:telegram:andytmxbot:direct:676871173",
+  "agentId": "andy",
+  "channel": "telegram",
+  "accountId": "andytmxbot",
+  "target": "676871173",
+  "threadId": null,
+  "replyTo": null,
+  "requestedBy": "676871173"
+}
+```
+
 One earlier smoke was accepted but later failed with transient
 `COMFY_PROMPT_MISSING`; the worker recovered automatically and the replacement
 smoke completed. This was after HTTP dispatch acceptance and did not involve
@@ -170,6 +196,8 @@ Go only when all are true:
 - At least one fresh worker advertises RabbitMQ enabled and has capacity.
 - ready, retry, and dead-letter queues start at zero.
 - status/callback delivery is healthy.
+- completion routing preserves the originating account, chat/topic, or Web TUI
+  session.
 - rollback commands and responsible operator are confirmed.
 
 No-go on any validation error, stale worker heartbeat, non-empty dead-letter
@@ -192,6 +220,8 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 1. Restore an authenticated workflow export path and refresh the checked-in
    Submit v2 JSON from live n8n.
 2. Revalidate the exported source.
-3. Prepare Stage 2 runtime commands and observation checklist.
-4. Do not enable `rabbitmq-canary` or the worker consumer without a separate
+3. Run one controlled topic-origin completion and one Web TUI-origin completion
+   to prove channel-specific delivery.
+4. Prepare Stage 2 runtime commands and observation checklist.
+5. Do not enable `rabbitmq-canary` or the worker consumer without a separate
    explicit go/no-go.
