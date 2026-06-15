@@ -564,3 +564,77 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 2. Revalidate the exported sources.
 3. Execute Stage 4 only after explicit `GO Stage 4`.
 4. Keep production on HTTP until that go/no-go.
+
+### Stage 4 Execution Attempt — Rolled Back
+
+Executed on 2026-06-15 after explicit `GO Stage 4`.
+
+Baseline / setup:
+
+- NAS dispatch mode was switched to `MEDIA_DISPATCH_MODE=rabbitmq`.
+- Worker RabbitMQ consumer was enabled with prefetch `1`.
+- RabbitMQ queues started and remained clean during execution:
+  `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead` all had zero
+  ready/unacknowledged messages at checks.
+- A fresh worker heartbeat was required before the final webchat submit; without
+  it, Submit v2 correctly failed closed with `NO_READY_WORKER` before publish.
+
+Completed default-RabbitMQ jobs:
+
+- DM request `req-rabbitmq-stage4-dm-20260615-191833`
+  - job `job_1781525918171_zj28ka`
+  - artifact size `423396` bytes
+  - output `/Users/andy/ComfyUI/output/audio/acestep-turbo_00041_.mp3`
+  - completed at `2026-06-15T12:22:02.763Z`
+  - storage key `generated/audio/2026/06/15/req-rabbitmq-stage4-dm-20260615-191833/acestep-turbo_00041_.mp3`
+- Topic request `req-rabbitmq-stage4-topic-20260615-192528`
+  - job `job_1781526329793_3lcmm5`
+  - artifact size `469863` bytes
+  - output `/Users/andy/ComfyUI/output/audio/acestep-turbo_00042_.mp3`
+  - completed at `2026-06-15T12:28:11.841Z`
+  - storage key `generated/audio/2026/06/15/req-rabbitmq-stage4-topic-20260615-192528/acestep-turbo_00042_.mp3`
+- Webchat request `req-rabbitmq-stage4-webchat-20260615-192927`
+  - job `job_1781526572893_s5uj2q`
+  - artifact size `395472` bytes
+  - output `/Users/andy/ComfyUI/output/audio/acestep-turbo_00043_.mp3`
+  - completed at `2026-06-15T12:32:09.215Z`
+  - storage key `generated/audio/2026/06/15/req-rabbitmq-stage4-webchat-20260615-192927/acestep-turbo_00043_.mp3`
+
+Deviation:
+
+- The first webchat submit `req-rabbitmq-stage4-webchat-20260615-192832` failed
+  closed with `NO_READY_WORKER` before publish while the worker heartbeat was
+  stale.
+- During replay/evidence checking, the earlier failed webchat payload was
+  accidentally submitted again after heartbeat refresh, creating an unintended
+  extra RabbitMQ job instead of an idempotent replay of an existing completed
+  request.
+- Extra request `req-rabbitmq-stage4-webchat-20260615-192832`
+  - job `job_1781526804021_xmyyvb`
+  - artifact size `402480` bytes
+  - output `/Users/andy/ComfyUI/output/audio/acestep-turbo_00044_.mp3`
+  - completed at `2026-06-15T12:36:29.650Z`
+  - storage key `generated/audio/2026/06/15/req-rabbitmq-stage4-webchat-20260615-192832/acestep-turbo_00044_.mp3`
+
+Decision:
+
+- Treat the unintended extra job as a Stage 4 runbook deviation.
+- Do not leave default RabbitMQ enabled from this attempt.
+- Roll back to HTTP and repeat Stage 4 only after the replay/evidence commands
+  are corrected to avoid resubmitting previously failed payloads.
+
+Rollback result:
+
+- NAS restored to `MEDIA_DISPATCH_MODE=http`.
+- `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` cleared.
+- Worker restored to `RABBITMQ_ENABLED=false`.
+- n8n recreated and healthy.
+- Worker healthy with `activeJobs=0`, `resumableJobs=0`, and
+  `rabbitmq.enabled=false`.
+- RabbitMQ consumers returned to zero.
+- `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead` all ended
+  with zero messages, zero ready, and zero unacknowledged.
+
+Stage 4 final status for this attempt: **rolled back / no-go to remain on
+RabbitMQ by default** because of the operator-runbook deviation, despite all
+executed RabbitMQ jobs completing cleanly.
