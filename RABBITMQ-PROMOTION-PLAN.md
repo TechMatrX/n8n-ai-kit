@@ -1,6 +1,6 @@
 # RabbitMQ Media Dispatch Promotion Plan
 
-Status: Stage 1 live implementation complete; production remains HTTP.
+Status: Stage 2 controlled canary complete; production remains HTTP.
 
 ## Stage 1 Live State
 
@@ -63,6 +63,44 @@ identity:
 - RabbitMQ management API access using the worker AMQP credential returned
   HTTP 401, as expected when that user lacks management API access; SSH plus
   `rabbitmqctl` remains the authenticated operations path.
+
+## Stage 2 Canary Result
+
+Completed on 2026-06-15 with one allowlisted production request:
+
+- request ID: `req-rabbitmq-stage2-20260615-153525`
+- job ID: `job_1781512649769_qfgsgv`
+- broker message ID: `msg_1781512649769_zkb7ka`
+- profile/duration: `acestep_turbo`, 15 seconds
+- Submit v2 response: `202 Accepted`
+- dispatch policy: `rabbitmq-canary` resolved to `rabbitmq` because the request
+  ID was allowlisted
+- selected worker: `mac-studio-a`, RabbitMQ enabled, prefetch `1`
+- completed artifact: 417,354-byte MP3
+- storage key:
+  `generated/audio/2026/06/15/req-rabbitmq-stage2-20260615-153525/acestep-turbo_00033_.mp3`
+- terminal job row: `completed`
+- idempotent replay: `200`, same job ID, no second execution
+- post-canary ready, retry, and dead-letter queues: zero messages and zero
+  unacknowledged messages
+- rollback completed: NAS returned to `MEDIA_DISPATCH_MODE=http`, canary
+  allowlist cleared, worker returned to `RABBITMQ_ENABLED=false`, and RabbitMQ
+  consumers returned to zero
+
+The canary also exposed a callback workflow defect: Callback v1 dropped the
+top-level `delivery` envelope before notifying OpenClaw, so the completed media
+used the configured DM fallback. Callback v1 was patched live to preserve
+`delivery` through normalization, job result storage, and the OpenClaw
+notification payload. Both Callback v1 and Submit v2 validate with zero errors.
+A synthetic terminal callback then proved exact routing with:
+
+- `deliverySource=callback`
+- `accountId=andytmxbot`
+- `target=676871173`
+- `replyTo=24424`
+- Telegram message ID `24463`
+
+No second RabbitMQ media job was run after the callback fix.
 
 Delivery envelope:
 
@@ -194,7 +232,7 @@ Operational checks:
 - Run HTTP smoke and idempotency replay tests.
 - Confirm the dormant branch cannot publish.
 
-### Stage 2: Allowlisted Production Canary
+### Stage 2: Allowlisted Production Canary (Complete)
 
 - Set worker `RABBITMQ_ENABLED=true`, prefetch `1`.
 - Set n8n `MEDIA_DISPATCH_MODE=rabbitmq-canary`.
@@ -246,10 +284,7 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 ## Next Implementation Slice
 
 1. Restore an authenticated workflow export path and refresh the checked-in
-   Submit v2 JSON from live n8n.
-2. Revalidate the exported source.
-3. Prepare the exact Stage 2 runtime commands and observation checklist using
-   the dedicated OpenClaw SSH identity.
-4. Prepare Stage 2 runtime commands and observation checklist.
-5. Do not enable `rabbitmq-canary` or the worker consumer without a separate
-   explicit go/no-go.
+   Submit v2 and Callback v1 JSON from live n8n.
+2. Revalidate the exported sources.
+3. Define the Stage 3 limited-traffic scope and observation window.
+4. Keep production on HTTP until a separate Stage 3 go/no-go.
