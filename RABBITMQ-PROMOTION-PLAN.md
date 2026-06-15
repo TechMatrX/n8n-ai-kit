@@ -1,6 +1,6 @@
 # RabbitMQ Media Dispatch Promotion Plan
 
-Status: Stage 2 controlled canary complete; production remains HTTP.
+Status: Stage 3 limited-traffic runbook ready; production remains HTTP.
 
 ## Stage 1 Live State
 
@@ -247,6 +247,81 @@ Operational checks:
 - Require zero dead letters and no unresolved queued jobs.
 - Keep HTTP available for requests not selected before publish.
 
+### Stage 3 Prepared Scope
+
+Prepared on 2026-06-15. Stage 3 must remain allowlist-only; do not use a
+percentage gate yet.
+
+Scope:
+
+- three unique 15-second `acestep_turbo` requests
+- one active RabbitMQ job at a time
+- explicit `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` containing only the prepared
+  request IDs
+- observation window: 30 minutes after the third completion
+- origin coverage:
+  - one Telegram DM request
+  - one Telegram topic request
+  - one Web TUI/webchat request or synthetic terminal callback if no active
+    Web TUI submit path is available
+
+Stage 3 preflight gates:
+
+- Submit v2 validation: zero errors
+- Callback v1 validation: zero errors
+- NAS `MEDIA_DISPATCH_MODE=http`
+- worker `RABBITMQ_ENABLED=false`
+- `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead` all have
+  zero messages and zero unacknowledged messages
+- worker health reports zero active/resumable jobs and capacity available
+- callback delivery test after the Stage 2 fix has `deliverySource=callback`
+
+Stage 3 runtime sequence:
+
+1. Generate three request IDs and write them into the Stage 3 log.
+2. Enable worker RabbitMQ consumer with `RABBITMQ_ENABLED=true`, prefetch `1`,
+   then restart the worker.
+3. Set NAS `MEDIA_DISPATCH_MODE=rabbitmq-canary`.
+4. Set `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` to the three generated request IDs.
+5. Recreate only the n8n service.
+6. Submit request 1 and wait for terminal completion.
+7. Verify job row, artifact delivery, and zero ready/retry/dead queues.
+8. Submit request 2 only after request 1 is terminal and queues are zero.
+9. Submit request 3 only after request 2 is terminal and queues are zero.
+10. Restore NAS `MEDIA_DISPATCH_MODE=http` and clear the allowlist.
+11. Disable worker RabbitMQ with `RABBITMQ_ENABLED=false`, restart the worker.
+12. Run an idempotent replay for each Stage 3 request and one non-allowlisted
+    HTTP smoke.
+13. Observe for 30 minutes: worker health, job rows, queue depth, and delivery
+    logs.
+
+Stage 3 success criteria:
+
+- all three allowlisted requests complete exactly once
+- no duplicate `requestId` or `jobId`
+- all completions deliver via `deliverySource=callback`
+- no messages in ready, retry, or dead-letter queues after each job
+- worker returns to RabbitMQ disabled after rollback
+- n8n returns to `MEDIA_DISPATCH_MODE=http`
+
+Stage 3 no-go / abort:
+
+- any validation error
+- stale worker heartbeat
+- any queue message in `media.jobs.dead`
+- any retry message after the first retry interval
+- callback delivery fallback for a request that supplied a delivery envelope
+- ComfyUI terminal failure unrelated to RabbitMQ can be recorded, but do not
+  submit the next Stage 3 request until the failed job is reconciled
+
+Stage 3 commands use the dedicated NAS identity:
+
+```bash
+ssh -i ~/.ssh/id_ed25519_openclaw openclaw@100.73.253.62
+```
+
+Do not start Stage 3 execution without a fresh explicit `GO Stage 3`.
+
 ### Stage 4: RabbitMQ Default
 
 - Set `MEDIA_DISPATCH_MODE=rabbitmq`.
@@ -286,5 +361,5 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 1. Restore an authenticated workflow export path and refresh the checked-in
    Submit v2 and Callback v1 JSON from live n8n.
 2. Revalidate the exported sources.
-3. Define the Stage 3 limited-traffic scope and observation window.
-4. Keep production on HTTP until a separate Stage 3 go/no-go.
+3. Execute Stage 3 only after explicit `GO Stage 3`.
+4. Keep production on HTTP until that go/no-go.
