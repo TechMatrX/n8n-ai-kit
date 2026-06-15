@@ -54,13 +54,15 @@ Origin-routing validation completed on 2026-06-15:
   `RABBITMQ_ENABLED=false`.
 - Worker source syntax validation passed.
 
-Direct NAS queue verification could not be refreshed during this validation:
+Direct NAS queue verification was refreshed using the dedicated OpenClaw SSH
+identity:
 
-- SSH to `openclaw@100.73.253.62` was rejected by the available key.
+- NAS dispatch mode remained `MEDIA_DISPATCH_MODE=http`.
+- `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead` each reported
+  zero messages, zero ready, zero unacknowledged, and zero consumers.
 - RabbitMQ management API access using the worker AMQP credential returned
-  HTTP 401, as expected when that user lacks management API access.
-- The last verified ready, retry, and dead-letter queue counts remain zero,
-  but Stage 2 is no-go until fresh queue evidence is obtained.
+  HTTP 401, as expected when that user lacks management API access; SSH plus
+  `rabbitmqctl` remains the authenticated operations path.
 
 Delivery envelope:
 
@@ -246,8 +248,8 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 1. Restore an authenticated workflow export path and refresh the checked-in
    Submit v2 JSON from live n8n.
 2. Revalidate the exported source.
-3. Restore an authenticated NAS/RabbitMQ operations path and obtain fresh zero
-   counts for ready, retry, and dead-letter queues.
+3. Prepare the exact Stage 2 runtime commands and observation checklist using
+   the dedicated OpenClaw SSH identity.
 4. Prepare Stage 2 runtime commands and observation checklist.
 5. Do not enable `rabbitmq-canary` or the worker consumer without a separate
    explicit go/no-go.
