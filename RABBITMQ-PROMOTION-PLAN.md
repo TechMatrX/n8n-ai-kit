@@ -1,6 +1,6 @@
 # RabbitMQ Media Dispatch Promotion Plan
 
-Status: Stage 3 limited-traffic runbook ready; production remains HTTP.
+Status: Stage 3 limited-traffic run completed; production remains HTTP.
 
 ## Stage 1 Live State
 
@@ -322,6 +322,95 @@ ssh -i ~/.ssh/id_ed25519_openclaw openclaw@100.73.253.62
 
 Do not start Stage 3 execution without a fresh explicit `GO Stage 3`.
 
+### Stage 3 Result
+
+Executed on 2026-06-15 after explicit `GO Stage 3`.
+
+Preflight:
+
+- Submit v2 validation: zero errors
+- Callback v1 validation: zero errors
+- NAS started in `MEDIA_DISPATCH_MODE=http`
+- worker started with `RABBITMQ_ENABLED=false`
+- `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead` all started
+  with zero messages and zero unacknowledged messages
+- worker health reported zero active/resumable jobs and capacity available
+
+Runtime setup:
+
+- Stage 3 allowlist:
+  - `req-rabbitmq-stage3-dm-20260615-165113`
+  - `req-rabbitmq-stage3-topic-20260615-165113`
+  - `req-rabbitmq-stage3-webchat-20260615-165113`
+- worker RabbitMQ consumer enabled with prefetch `1`
+- NAS set to `MEDIA_DISPATCH_MODE=rabbitmq-canary`
+- non-allowlisted traffic remained on HTTP
+
+Initial guardrail event:
+
+- first DM submit failed closed before publish because Submit v2 saw a stale
+  worker RabbitMQ heartbeat
+- no job row was created and no RabbitMQ message was published
+- refreshed the worker heartbeat with `npm run heartbeat:publish`
+- continued only after the worker advertised fresh RabbitMQ readiness
+
+Limited RabbitMQ jobs:
+
+- DM request `req-rabbitmq-stage3-dm-20260615-165113`
+  - job `job_1781517230380_mq9zlh`
+  - broker message `msg_1781517230380_g563je`
+  - artifact: 412,545-byte MP3
+  - storage:
+    `generated/audio/2026/06/15/req-rabbitmq-stage3-dm-20260615-165113/acestep-turbo_00034_.mp3`
+  - delivery: `deliverySource=callback`, account `andytmxbot`, target
+    `676871173`, reply-to `24491`, Telegram message `24513`
+  - queues zero after completion
+- Topic request `req-rabbitmq-stage3-topic-20260615-165113`
+  - job `job_1781517530368_agvj97`
+  - broker message `msg_1781517530368_fx1xhr`
+  - artifact: 433,102-byte MP3
+  - storage:
+    `generated/audio/2026/06/15/req-rabbitmq-stage3-topic-20260615-165113/acestep-turbo_00035_.mp3`
+  - delivery: `deliverySource=callback`, account `andytmxbot`, target
+    `-1003499263851`, thread `2666`, Telegram message `3174`
+  - queues zero after completion
+- Webchat request `req-rabbitmq-stage3-webchat-20260615-165113`
+  - job `job_1781517817172_1uy0lt`
+  - artifact: 399,887-byte MP3
+  - storage:
+    `generated/audio/2026/06/15/req-rabbitmq-stage3-webchat-20260615-165113/acestep-turbo_00036_.mp3`
+  - delivery: `deliverySource=callback`, session `agent:andy:main`, agent
+    `andy`, injected message `38a7db37-41da-4086-b953-81bbdf554dfc`
+
+Rollback and regression:
+
+- NAS restored to `MEDIA_DISPATCH_MODE=http`
+- `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` cleared
+- worker restored to `RABBITMQ_ENABLED=false`
+- RabbitMQ consumers returned to zero
+- idempotent replays for all three Stage 3 requests returned `200`, same job
+  IDs, and `idempotentReplay=true`
+- non-allowlisted HTTP regression request
+  `req-rabbitmq-stage3-http-regression-20260615-1710` completed after rollback
+  as job `job_1781518199496_gxsk9t`
+  - artifact: 397,664-byte MP3
+  - delivery: `deliverySource=callback`, account `andytmxbot`, target
+    `676871173`, reply-to `24491`, Telegram message `24546`
+
+Observation:
+
+- 30-minute observation window:
+  - start: `2026-06-15T10:14:18Z`
+  - end: `2026-06-15T10:44:18Z`
+- final worker health: `status=ok`, zero active/resumable jobs,
+  `rabbitmq.enabled=false`
+- final NAS mode: `MEDIA_DISPATCH_MODE=http`
+- final allowlist: empty
+- final `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead`
+  counts: zero messages, zero ready, zero unacknowledged, zero consumers
+
+Stage 3 result: pass. Stage 4 remains gated by a separate explicit go/no-go.
+
 ### Stage 4: RabbitMQ Default
 
 - Set `MEDIA_DISPATCH_MODE=rabbitmq`.
@@ -361,5 +450,5 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 1. Restore an authenticated workflow export path and refresh the checked-in
    Submit v2 and Callback v1 JSON from live n8n.
 2. Revalidate the exported sources.
-3. Execute Stage 3 only after explicit `GO Stage 3`.
-4. Keep production on HTTP until that go/no-go.
+3. Prepare Stage 4 default RabbitMQ runbook and go/no-go criteria.
+4. Keep production on HTTP until explicit `GO Stage 4`.
