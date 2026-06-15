@@ -1,6 +1,39 @@
 # RabbitMQ Media Dispatch Promotion Plan
 
-Status: design approved for implementation sequencing; production remains HTTP.
+Status: Stage 1 live implementation complete; production remains HTTP.
+
+## Stage 1 Live State
+
+Completed on 2026-06-15 in active workflow `ma2PY9x1YIcNlEBm`:
+
+- Added fail-closed validation for `http`, `rabbitmq-canary`, and `rabbitmq`.
+- Added `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` request-ID allowlisting.
+- Added selected-worker RabbitMQ readiness and queue checks before publish.
+- Added `Dispatch Policy Valid?` so policy failures cannot fall through to HTTP.
+- Added dispatch policy metadata to job payload and result records.
+- Kept NAS `MEDIA_DISPATCH_MODE=http`.
+- Kept worker `RABBITMQ_ENABLED=false`.
+
+Validation evidence:
+
+- live workflow validation: 0 errors
+- HTTP submit: `202 Accepted`
+- idempotency replay: `200`, same job ID
+- completed replacement smoke:
+  `req-rabbitmq-promotion-stage1c-20260615-1439`
+- completed artifact size: 404,956 bytes
+- worker returned ready with zero active/resumable jobs
+- ready, retry, and dead-letter queues remained empty
+
+One earlier smoke was accepted but later failed with transient
+`COMFY_PROMPT_MISSING`; the worker recovered automatically and the replacement
+smoke completed. This was after HTTP dispatch acceptance and did not involve
+the dormant RabbitMQ branch.
+
+Source-control follow-up: refresh the checked-in Submit v2 workflow JSON from
+the live n8n API. The shell export credential returned HTTP 401, while the n8n
+MCP edit/validation path remained authenticated. Do not replace the source file
+with a hand-reconstructed graph.
 
 ## Objective
 
@@ -100,7 +133,7 @@ Operational checks:
 - worker RabbitMQ consumer disabled
 - queues empty
 
-### Stage 1: Production Workflow, Dormant Branch
+### Stage 1: Production Workflow, Dormant Branch (Complete Live)
 
 - Add and validate the RabbitMQ branch in Submit v2.
 - Keep `MEDIA_DISPATCH_MODE=http`.
@@ -156,6 +189,9 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 
 ## Next Implementation Slice
 
-Add the dormant feature-flagged RabbitMQ branch to the source-controlled Submit
-v2 workflow, with `MEDIA_DISPATCH_MODE=http` as the default. Validate locally
-and in n8n, but do not activate RabbitMQ traffic or modify NAS runtime values.
+1. Restore an authenticated workflow export path and refresh the checked-in
+   Submit v2 JSON from live n8n.
+2. Revalidate the exported source.
+3. Prepare Stage 2 runtime commands and observation checklist.
+4. Do not enable `rabbitmq-canary` or the worker consumer without a separate
+   explicit go/no-go.
