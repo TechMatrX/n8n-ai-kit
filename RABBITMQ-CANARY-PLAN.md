@@ -166,5 +166,6 @@ The canary is successful only when all are true:
 
 ## Current Decision
 
-Do not run the canary yet. The system is staged for a future explicit approval,
-with runtime still on HTTP dispatch.
+The one-job canary has since been proven, including job-row completion. Runtime
+remains on HTTP dispatch and the standalone canary workflow remains inactive.
+See `RABBITMQ-PROMOTION-PLAN.md` for the staged production promotion design.
