@@ -1,6 +1,6 @@
 # RabbitMQ Media Dispatch Promotion Plan
 
-Status: Stage 3 limited-traffic run completed; production remains HTTP.
+Status: Stage 4 default-RabbitMQ runbook ready; production remains HTTP.
 
 ## Stage 1 Live State
 
@@ -417,6 +417,118 @@ Stage 3 result: pass. Stage 4 remains gated by a separate explicit go/no-go.
 - Keep HTTP code and credentials intact for rollback.
 - Remove the standalone canary workflow only after a stable observation period.
 
+### Stage 4 Prepared Scope
+
+Prepared on 2026-06-15. Stage 4 changes the default production dispatch mode
+from HTTP to RabbitMQ. It must not start without explicit `GO Stage 4`.
+
+Baseline verified before preparing this runbook:
+
+- worker health: `status=ok`, zero active/resumable jobs, capacity available
+- worker RabbitMQ state: `RABBITMQ_ENABLED=false`
+- NAS mode: `MEDIA_DISPATCH_MODE=http`
+- NAS canary allowlist: empty
+- `media.jobs.ready`, `media.jobs.retry.1m`, and `media.jobs.dead` all had
+  zero messages, zero ready, zero unacknowledged, and zero consumers
+- Submit v2 live validation: zero errors
+- Callback v1 live validation: zero errors
+
+Stage 4 scope:
+
+- enable one RabbitMQ consumer on `mac-studio-a` with prefetch `1`
+- switch NAS `MEDIA_DISPATCH_MODE` from `http` to `rabbitmq`
+- keep `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` empty
+- submit three sequential production requests:
+  - one Telegram DM request
+  - one Telegram topic request
+  - one Web TUI/webchat request
+- keep one active RabbitMQ job at a time
+- run an idempotent replay for each request
+- run one post-switch non-RabbitMQ rollback smoke only if rollback is invoked
+- observe for 60 minutes after the third completion
+
+Stage 4 preflight gates:
+
+- Submit v2 validation: zero errors
+- Callback v1 validation: zero errors
+- worker health reports zero active/resumable jobs and capacity available
+- worker RabbitMQ heartbeat is freshly published after enabling the consumer
+- ready, retry, and dead-letter queues start at zero
+- NAS starts in `MEDIA_DISPATCH_MODE=http`
+- Stage 3 result remains clean: no unresolved job rows, no retry/dead messages,
+  and no callback fallback for requests that supplied delivery envelopes
+- rollback commands are staged and tested as syntax-only before the switch
+
+Stage 4 runtime sequence:
+
+1. Capture a timestamped baseline: worker health, n8n health, NAS env mode,
+   and RabbitMQ queue depths.
+2. Enable worker RabbitMQ consumer with `RABBITMQ_ENABLED=true`, prefetch `1`,
+   then restart the worker.
+3. Publish a fresh worker heartbeat with `npm run heartbeat:publish`.
+4. Verify Submit v2 sees the worker as RabbitMQ-ready.
+5. Set NAS `MEDIA_DISPATCH_MODE=rabbitmq`.
+6. Ensure `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` remains empty.
+7. Recreate only the n8n service.
+8. Submit request 1 and wait for terminal completion.
+9. Verify job row, artifact delivery, callback routing, and zero
+   ready/retry/dead queues.
+10. Submit request 2 only after request 1 is terminal and queues are zero.
+11. Submit request 3 only after request 2 is terminal and queues are zero.
+12. Run an idempotent replay for each Stage 4 request and confirm `200`, same
+    job IDs, and no duplicate execution.
+13. Observe for 60 minutes: worker health, queue depth, job rows, callback
+    logs, and delivery logs.
+14. Leave RabbitMQ enabled only if all success criteria hold through the
+    observation window.
+
+Stage 4 success criteria:
+
+- all three default RabbitMQ requests complete exactly once
+- all three completions deliver via `deliverySource=callback`
+- delivery preserves origin across DM, topic, and Web TUI/webchat
+- no duplicate `requestId` or `jobId`
+- idempotent replays return existing job IDs without new execution
+- ready, retry, and dead-letter queues are zero after each job and after the
+  observation window
+- worker remains healthy with zero active/resumable jobs after observation
+- no fallback to HTTP occurs while `MEDIA_DISPATCH_MODE=rabbitmq`
+
+Stage 4 rollback trigger:
+
+- stale worker heartbeat after enabling RabbitMQ
+- publish failure or ambiguous broker publish result
+- any message in `media.jobs.dead`
+- any retry message that survives the first retry interval
+- callback delivery fallback for a request that supplied a delivery envelope
+- duplicate execution for the same `requestId` or `jobId`
+- worker health not `ok`, drain enabled unexpectedly, or active job stuck past
+  the expected completion window
+- n8n health failure after the mode switch
+
+Stage 4 rollback sequence:
+
+1. Set NAS `MEDIA_DISPATCH_MODE=http`.
+2. Clear `MEDIA_RABBITMQ_CANARY_REQUEST_IDS`.
+3. Recreate only the n8n service.
+4. Stop submitting new RabbitMQ jobs.
+5. Leave already-acknowledged RabbitMQ jobs to finish unless worker health is
+   unsafe; do not replay them through HTTP.
+6. Inspect ready, retry, and dead-letter queues by `requestId` and `jobId`.
+7. Set worker `RABBITMQ_ENABLED=false` and restart the worker.
+8. Verify worker health, RabbitMQ consumers zero, and ready/retry/dead queues
+   zero or explicitly reconciled.
+9. Run one HTTP smoke and one idempotency replay after rollback.
+10. Document the rollback cause and evidence before any retry.
+
+Stage 4 commands use the dedicated NAS identity:
+
+```bash
+ssh -i ~/.ssh/id_ed25519_openclaw openclaw@100.73.253.62
+```
+
+Do not start Stage 4 execution without a fresh explicit `GO Stage 4`.
+
 ## Go/No-Go Gate
 
 Go only when all are true:
@@ -450,5 +562,5 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 1. Restore an authenticated workflow export path and refresh the checked-in
    Submit v2 and Callback v1 JSON from live n8n.
 2. Revalidate the exported sources.
-3. Prepare Stage 4 default RabbitMQ runbook and go/no-go criteria.
-4. Keep production on HTTP until explicit `GO Stage 4`.
+3. Execute Stage 4 only after explicit `GO Stage 4`.
+4. Keep production on HTTP until that go/no-go.
