@@ -36,6 +36,32 @@ Origin-aware completion routing was added on 2026-06-15 before Stage 2:
 - Missing delivery metadata falls back to the configured Andy DM and is logged
   with `deliverySource=fallback`.
 
+Origin-routing validation completed on 2026-06-15:
+
+- Telegram topic callback `req-origin-topic-20260615152320` was delivered by
+  account `andytmxbot` to chat `-1003499263851`, topic `2666`; OpenClaw
+  reported message ID `3173`.
+- Web TUI callback `req-origin-webchat-20260615152337` was injected into
+  `agent:andy:main`; session history contains gateway-injected message ID
+  `0456c3e2-1a7d-401b-a4c8-d5de333875dc`.
+- Missing-envelope callback `req-origin-fallback-20260615152320` used the
+  configured Telegram DM fallback with `deliverySource=fallback`; OpenClaw
+  reported message ID `1318`.
+- These were synthetic failed-status callbacks labeled `VALIDATION_ONLY`; no
+  ComfyUI media work was submitted.
+- Submit v2 runtime validation remained at zero errors.
+- Worker health remained ready with zero active/resumable jobs and
+  `RABBITMQ_ENABLED=false`.
+- Worker source syntax validation passed.
+
+Direct NAS queue verification could not be refreshed during this validation:
+
+- SSH to `openclaw@100.73.253.62` was rejected by the available key.
+- RabbitMQ management API access using the worker AMQP credential returned
+  HTTP 401, as expected when that user lacks management API access.
+- The last verified ready, retry, and dead-letter queue counts remain zero,
+  but Stage 2 is no-go until fresh queue evidence is obtained.
+
 Delivery envelope:
 
 ```json
@@ -220,8 +246,8 @@ queue, unresolved job row, callback failure, or ambiguous duplicate.
 1. Restore an authenticated workflow export path and refresh the checked-in
    Submit v2 JSON from live n8n.
 2. Revalidate the exported source.
-3. Run one controlled topic-origin completion and one Web TUI-origin completion
-   to prove channel-specific delivery.
+3. Restore an authenticated NAS/RabbitMQ operations path and obtain fresh zero
+   counts for ready, retry, and dead-letter queues.
 4. Prepare Stage 2 runtime commands and observation checklist.
 5. Do not enable `rabbitmq-canary` or the worker consumer without a separate
    explicit go/no-go.
