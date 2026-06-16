@@ -475,11 +475,19 @@ Stage 4 runtime sequence:
    ready/retry/dead queues.
 10. Submit request 2 only after request 1 is terminal and queues are zero.
 11. Submit request 3 only after request 2 is terminal and queues are zero.
-12. Run an idempotent replay for each Stage 4 request and confirm `200`, same
-    job IDs, and no duplicate execution.
-13. Observe for 60 minutes: worker health, queue depth, job rows, callback
+12. Build a Stage 4 replay manifest containing only requests whose job rows are
+    already terminal `completed`, then run the local replay guard in dry-run
+    mode before any HTTP replay:
+    `node scripts/stage4-replay-guard.mjs --manifest <stage4-manifest.json>`.
+13. Run guarded idempotent replays only for manifest entries allowed by the
+    replay guard, using `STAGE4_REPLAY_GUARD_CONFIRM=completed-only` with
+    `--execute`; confirm `200`, same job IDs, and no duplicate execution.
+14. Never replay a request that previously failed before job-row creation (for
+    example `NO_READY_WORKER`); create a new explicitly named Stage 4 request
+    instead.
+15. Observe for 60 minutes: worker health, queue depth, job rows, callback
     logs, and delivery logs.
-14. Leave RabbitMQ enabled only if all success criteria hold through the
+16. Leave RabbitMQ enabled only if all success criteria hold through the
     observation window.
 
 Stage 4 success criteria:
@@ -488,7 +496,8 @@ Stage 4 success criteria:
 - all three completions deliver via `deliverySource=callback`
 - delivery preserves origin across DM, topic, and Web TUI/webchat
 - no duplicate `requestId` or `jobId`
-- idempotent replays return existing job IDs without new execution
+- idempotent replays are executed through `scripts/stage4-replay-guard.mjs`
+  and return existing job IDs without new execution
 - ready, retry, and dead-letter queues are zero after each job and after the
   observation window
 - worker remains healthy with zero active/resumable jobs after observation
@@ -501,6 +510,7 @@ Stage 4 rollback trigger:
 - any message in `media.jobs.dead`
 - any retry message that survives the first retry interval
 - callback delivery fallback for a request that supplied a delivery envelope
+- replay guard blocks any evidence request
 - duplicate execution for the same `requestId` or `jobId`
 - worker health not `ok`, drain enabled unexpectedly, or active job stuck past
   the expected completion window
@@ -518,7 +528,7 @@ Stage 4 rollback sequence:
 7. Set worker `RABBITMQ_ENABLED=false` and restart the worker.
 8. Verify worker health, RabbitMQ consumers zero, and ready/retry/dead queues
    zero or explicitly reconciled.
-9. Run one HTTP smoke and one idempotency replay after rollback.
+9. Run one HTTP smoke and one guarded idempotency replay after rollback.
 10. Document the rollback cause and evidence before any retry.
 
 Stage 4 commands use the dedicated NAS identity:

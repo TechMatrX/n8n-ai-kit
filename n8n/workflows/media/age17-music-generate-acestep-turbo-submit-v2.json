@@ -79,9 +79,9 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ ({ requestId: $json.requestId, status: $json.status, stage: $json.stage, errorCode: $json.errorCode, message: $json.message, jobId: $json.jobId, metadata: $json.metadata }) }}",
+        "responseBody": "={{ (() => { let result = {}; try { result = $json.resultJson ? JSON.parse($json.resultJson) : {}; } catch {} return { requestId: $json.requestId, status: $json.status || result.status || 'failed', stage: $json.stage || result.stage, errorCode: $json.errorCode || result.errorCode, message: $json.message || result.message, jobId: $json.jobId, metadata: $json.metadata || { traceId: result.traceId } }; })() }}",
         "options": {
-          "responseCode": "={{ $json.responseCode || 500 }}"
+          "responseCode": "={{ (() => { try { return $json.responseCode || (JSON.parse($json.resultJson || '{}').responseCode) || 500; } catch { return $json.responseCode || 500; } })() }}"
         }
       },
       "id": "4",
@@ -474,6 +474,115 @@
         },
         "options": {}
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const error = $input.first().json;\nconst request = $('Validate and Build Workflow').first().json;\nconst updatedAtIso = $now.toISO();\nconst requestId = error.requestId || request.requestId;\nconst payloadJson = JSON.stringify({\n  profile: request.profile,\n  count: request.count,\n  tags: request.tags,\n  lyrics: request.lyrics,\n  bpm: request.bpm,\n  duration: request.duration,\n  language: request.language,\n  keyscale: request.keyscale,\n  timesignature: request.timesignature,\n  metadata: request.metadata,\n  workflowFile: request.workflowFile,\n  dispatchMode: error?.metadata?.dispatchMode || null,\n  selectedWorker: error?.metadata?.selectedWorker || null,\n  replayGuard: true\n});\nconst resultJson = JSON.stringify({\n  status: 'failed',\n  stage: error.stage || 'pre-dispatch',\n  errorCode: error.errorCode || 'PRE_DISPATCH_FAILED',\n  message: error.message || 'Request failed before durable dispatch',\n  responseCode: error.responseCode || 500,\n  traceId: error?.metadata?.traceId || request?.metadata?.traceId,\n  replayGuard: true,\n  failedAt: updatedAtIso\n});\nreturn [{ json: {\n  requestId,\n  jobId: error.jobId || '',\n  status: 'failed',\n  payloadJson,\n  resultJson,\n  updatedAtIso,\n  responseCode: error.responseCode || 500,\n  stage: error.stage || 'pre-dispatch',\n  errorCode: error.errorCode || 'PRE_DISPATCH_FAILED',\n  message: error.message || 'Request failed before durable dispatch',\n  metadata: error.metadata || request.metadata || {},\n  route: 'failed-row'\n} }];"
+      },
+      "id": "30",
+      "name": "Build Failed Job Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SPGOyAFf0KBfcgp4",
+          "mode": "list",
+          "cachedResultName": "MediaPhase1Jobs",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/SPGOyAFf0KBfcgp4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "requestId": "={{ $json.requestId }}",
+            "jobId": "={{ $json.jobId }}",
+            "status": "={{ $json.status }}",
+            "payloadJson": "={{ $json.payloadJson }}",
+            "resultJson": "={{ $json.resultJson }}",
+            "updatedAtIso": "={{ $json.updatedAtIso }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "requestId",
+              "displayName": "requestId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "jobId",
+              "displayName": "jobId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payloadJson",
+              "displayName": "payloadJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "resultJson",
+              "displayName": "resultJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updatedAtIso",
+              "displayName": "updatedAtIso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "31",
+      "name": "Create Failed Job Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2768,
+        704
+      ]
     }
   ],
   "connections": {
@@ -590,7 +699,7 @@
         ],
         [
           {
-            "node": "Respond Error",
+            "node": "Build Failed Job Row",
             "type": "main",
             "index": 0
           }
@@ -650,6 +759,28 @@
             "index": 0
           }
         ],
+        [
+          {
+            "node": "Build Failed Job Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Failed Job Row": {
+      "main": [
+        [
+          {
+            "node": "Create Failed Job Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Failed Job Row": {
+      "main": [
         [
           {
             "node": "Respond Error",
