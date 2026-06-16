@@ -1,6 +1,6 @@
 # RabbitMQ Media Dispatch Promotion Plan
 
-Status: Stage 4 default-RabbitMQ runbook ready; production remains HTTP.
+Status: Stage 4 promoted; production Submit v2 defaults to RabbitMQ.
 
 ## Stage 1 Live State
 
@@ -648,3 +648,65 @@ Rollback result:
 Stage 4 final status for this attempt: **rolled back / no-go to remain on
 RabbitMQ by default** because of the operator-runbook deviation, despite all
 executed RabbitMQ jobs completing cleanly.
+
+### Stage 4 Promotion Result
+
+Promoted on 2026-06-16 after explicit approval to skip additional topic/webchat
+e2e because those paths were already covered on 2026-06-15 and the no-go cause
+was replay/evidence handling, not RabbitMQ transport or delivery failure.
+
+Runtime state after promotion:
+
+- NAS n8n remains on `MEDIA_DISPATCH_MODE=rabbitmq`.
+- `MEDIA_RABBITMQ_CANARY_REQUEST_IDS` remains empty.
+- Worker `mac-studio-a` keeps `RABBITMQ_ENABLED=true`.
+- Worker consumes `media.jobs.ready` with prefetch `1`.
+- Standalone RabbitMQ canary workflow remains inactive and is retained for now.
+
+Promotion evidence:
+
+- Successful current-run default RabbitMQ request:
+  `req-rabbitmq-stage4-now-20260616-175825`
+  - job `job_1781607536490_79cnlg`
+  - broker message `msg_1781607536490_cna2in`
+  - dispatch policy `requestedMode=rabbitmq`, `resolvedMode=rabbitmq`
+  - worker accepted the RabbitMQ job
+  - Callback v1 marked `completed`
+  - artifact `generated/audio/2026/06/16/req-rabbitmq-stage4-now-20260616-175825/acestep-turbo_00046_.mp3`
+  - artifact size `408725` bytes
+- Guarded replay:
+  - `scripts/stage4-replay-guard.mjs` allowed only the completed row
+  - guarded replay returned HTTP `200`
+  - replay returned the same job ID `job_1781607536490_79cnlg`
+  - replay returned `idempotentReplay=true`
+  - no duplicate worker execution was observed
+- Failed pre-publish attempt:
+  `req-rabbitmq-stage4-now-20260616-175215`
+  - failed closed with `NO_READY_WORKER`
+  - created no job row
+  - published no RabbitMQ message
+  - queues remained zero
+
+Final promotion check at `2026-06-16T11:30:56Z`:
+
+- n8n health: OK
+- NAS mode: `MEDIA_DISPATCH_MODE=rabbitmq`
+- canary allowlist: empty
+- `media.jobs.ready`: `0` messages, `0` ready, `0` unacknowledged, `1` consumer
+- `media.jobs.retry.1m`: `0` messages
+- `media.jobs.dead`: `0` messages
+- worker `mac-studio-a`: `status=ok`, `activeJobs=0`, `resumableJobs=0`,
+  `capacityAvailable=true`
+- worker RabbitMQ: enabled on `media.jobs.ready`
+
+Decision:
+
+- Stage 4 promotion is accepted.
+- No more synthetic topic/webchat e2e jobs are required now.
+- Keep rollback ready for the rest of 2026-06-16:
+  1. set NAS `MEDIA_DISPATCH_MODE=http`
+  2. recreate only `n8n`
+  3. set worker `RABBITMQ_ENABLED=false`
+  4. restart the worker
+- Retire or remove the standalone canary workflow only after a later stable
+  period, not as part of the promotion moment.
