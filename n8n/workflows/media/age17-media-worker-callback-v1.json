@@ -1,16 +1,16 @@
 {
   "_openclawExport": {
-    "exportedAt": "2026-06-12T12:09:06.961Z",
+    "exportedAt": "2026-06-17T08:04:00.000Z",
     "source": "n8n_get_workflow",
-    "purpose": "Version live Phase 1 media workflow definitions from n8n",
+    "purpose": "Version live shared media worker callback workflow from n8n",
     "workflowId": "iW06DQkM5ZqaeEdt",
-    "workflowName": "AGE17 Dev - Music Generate acestep_turbo Callback v1",
+    "workflowName": "AGE17 Dev - Media Worker Callback v1",
     "activeAtExport": true,
     "versionId": "b07602e1-21ba-40ed-86aa-88e289bd2a15",
     "activeVersionId": "b07602e1-21ba-40ed-86aa-88e289bd2a15",
     "versionCounter": 5
   },
-  "name": "AGE17 Dev - Music Generate acestep_turbo Callback v1",
+  "name": "AGE17 Dev - Media Worker Callback v1",
   "nodes": [
     {
       "parameters": {
