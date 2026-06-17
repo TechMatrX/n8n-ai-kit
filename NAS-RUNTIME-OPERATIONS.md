@@ -107,9 +107,9 @@ Live workflow source exports are versioned under:
 - `n8n/workflows/media/age17-music-generate-acestep-turbo-submit-v2.json`
 - `n8n/workflows/media/age17-media-worker-callback-v1.json`
 
-Note: the shared callback workflow may still use the compatibility webhook path
-`dev/media/music-generate-callback-v1` until the media worker `N8N_CALLBACK_URL`
-is migrated in the same deployment pass.
+The shared callback workflow uses webhook path
+`dev/media/media-worker-callback-v1`; keep the media worker `N8N_CALLBACK_URL`
+aligned with that path.
 
 When patching these workflows through the live n8n UI or API, re-export them
 after validation so the repo remains the recovery/source reference.
