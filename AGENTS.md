@@ -49,6 +49,26 @@ docker compose down
 Use profile-specific Docker commands only when the task explicitly calls for
 that runtime mode.
 
+## Codebase Knowledge Graph
+
+This runtime uses `codebase-memory-mcp` to maintain a knowledge graph of the
+codebase. Prefer MCP graph tools over grep/glob/file-search for code discovery.
+
+Priority order:
+
+1. `search_graph` - find functions, classes, routes, and variables by pattern.
+2. `trace_path` - trace who calls a function or what it calls.
+3. `get_code_snippet` - read specific function or class source code.
+4. `query_graph` - run Cypher queries for complex patterns.
+5. `get_architecture` - get a high-level project summary.
+
+Fallback order:
+
+- If `search_graph` and `trace_path` do not produce enough useful code results,
+  prefer `search_code` before raw grep/glob.
+- Fall back to grep/glob when searching string literals, error messages, config
+  values, non-code files, or when graph/search_code results are insufficient.
+
 ## Safety
 
 - Do not commit `.env`, local backups, credentials, generated volumes, or
