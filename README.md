@@ -2,6 +2,18 @@
 
 **Self-hosted AI Starter Kit** is an open-source Docker Compose template designed to swiftly initialize a comprehensive local AI and low-code development environment.
 
+## AI Media Platform
+
+This repo provides the self-hosted n8n/local-AI runtime lane for Andy's AI Media
+Platform. Canonical cross-repo architecture, ADRs, runbooks, roadmap, and
+integration inventory live in:
+
+- `/Users/andy/Studio/ai/ai-media-platform`
+- <https://github.com/TechMatrX/ai-media-platform>
+
+Keep n8n stack implementation notes here. Record durable platform decisions and
+public contracts in the platform hub.
+
 ![n8n.io - Screenshot](https://raw.githubusercontent.com/n8n-io/self-hosted-ai-starter-kit/main/assets/n8n-demo.gif)
 
 Curated by <https://github.com/n8n-io>, it combines the self-hosted n8n
