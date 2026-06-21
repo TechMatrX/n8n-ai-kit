@@ -81,14 +81,25 @@ Phase 1 media-worker env keys expected in `.env`:
 MEDIA_WORKER_BASE_URL=https://media-worker.techmatrx.com
 MEDIA_WORKER_INGRESS_TOKEN=replace-with-worker-ingress-token
 MEDIA_WORKER_CALLBACK_TOKEN=replace-with-worker-callback-token
-OPENCLAW_MEDIA_COMPLETION_URL=https://openclaw-media.techmatrx.com/internal/media/jobs/complete
+OPENCLAW_MEDIA_COMPLETION_URL=https://openclaw-callback.techmatrx.com/internal/media/jobs/complete
 OPENCLAW_MEDIA_COMPLETION_TOKEN=replace-with-openclaw-completion-token
 ```
 
 `OPENCLAW_MEDIA_COMPLETION_*` enables Callback v1 to notify OpenClaw after it
 updates the n8n job row. The OpenClaw receiver is the local `media-completion`
-plugin exposed through Cloudflare Tunnel at
-`openclaw-media.techmatrx.com`.
+plugin exposed through the Mac Cloudflare Tunnel at
+`openclaw-callback.techmatrx.com`.
+
+Keep callback traffic separate from artifact traffic:
+
+- `openclaw-media.techmatrx.com` is the NAS artifact origin for `/artifacts/*`.
+- `openclaw-callback.techmatrx.com` is the Mac/OpenClaw callback endpoint for
+  `/internal/media/jobs/complete`.
+
+The callback workflow contains a fallback that rewrites the retired
+`openclaw-media.techmatrx.com/internal/media/jobs/complete` value to
+`openclaw-callback.techmatrx.com/internal/media/jobs/complete`, but the NAS
+`.env` should still use the callback host directly.
 
 The completion payload should include artifact pointers so OpenClaw does not
 have to search for output media:
