@@ -1,0 +1,269 @@
+{
+  "_openclawExport": {
+    "exportedAt": "2026-06-20T02:30:00.000Z",
+    "source": "n8n_update_partial_workflow",
+    "purpose": "Stage manual-approval YouTube publishing package workflow with duplicate ledger, thumbnail path, and rollback plan while keeping external publish disabled",
+    "workflowId": "K1Sbm9sc6QQJNeTR",
+    "workflowName": "AGE17 Dev - YouTube Publish Package v1",
+    "activeAtExport": false,
+    "validation": {
+      "valid": true,
+      "errors": 0,
+      "warnings": 8
+    },
+    "dryRun": {
+      "executionId": "7272",
+      "requestId": "dry-run-youtube-publish-20260620",
+      "status": "preflight_only",
+      "gateBlocks": [
+        "approval_required",
+        "upload_branch_disabled"
+      ],
+      "externalUploadTriggered": false
+    }
+  },
+  "name": "AGE17 Dev - YouTube Publish Package v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dev/media/youtube-publish-package-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ytpub-1",
+      "name": "Publish Package Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        260,
+        340
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst body = input.body ?? input;\nconst expectedToken = String($env.YOUTUBE_PUBLISH_APPROVAL_TOKEN || '').trim();\nconst providedToken = String(body.approvalToken || body.publishApprovalToken || '').trim();\nconst publishApproved = Boolean(expectedToken && providedToken && providedToken === expectedToken && body.confirm === 'publish-to-youtube');\nconst uploadEnabled = false;\n\nfunction text(value) {\n  return typeof value === 'string' ? value.trim() : '';\n}\n\nfunction firstText(...values) {\n  for (const value of values) {\n    const result = text(value);\n    if (result) return result;\n  }\n  return '';\n}\n\nfunction clamp(value, max) {\n  const result = text(value);\n  return result.length > max ? result.slice(0, max).trim() : result;\n}\n\nfunction arrayFrom(value) {\n  if (Array.isArray(value)) return value;\n  return String(value || '').split(',');\n}\n\nconst artifacts = body.artifacts || {};\nconst metadata = body.metadata || {};\nconst youtubeMetadata = metadata.youtube && typeof metadata.youtube === 'object' && !Array.isArray(metadata.youtube) ? metadata.youtube : {};\nconst publishingMetadata = metadata.publishing && typeof metadata.publishing === 'object' && !Array.isArray(metadata.publishing) ? metadata.publishing : {};\nconst requestId = firstText(body.requestId, metadata.requestId);\nconst artifactPageUrl = firstText(body.artifactPageUrl, artifacts.pageUrl, artifacts.artifactPageUrl);\nconst finalVideoUrl = firstText(body.finalVideoUrl, artifacts.finalVideoUrl, artifacts.mp4Url, artifacts.videoUrl);\nconst thumbnailUrl = firstText(body.thumbnailUrl, artifacts.thumbnailUrl);\nconst title = clamp(firstText(body.title, youtubeMetadata.title, publishingMetadata.title, metadata.title), 100);\nconst descriptionBase = firstText(body.description, youtubeMetadata.description, publishingMetadata.description, metadata.description);\nconst sourceLine = artifactPageUrl ? `\\n\\nSource artifact package: ${artifactPageUrl}` : '';\nconst description = clamp(`${descriptionBase}${sourceLine}`, 5000);\nconst metadataTags = Array.isArray(youtubeMetadata.tags) ? youtubeMetadata.tags : (Array.isArray(publishingMetadata.tags) ? publishingMetadata.tags : arrayFrom(youtubeMetadata.tags || publishingMetadata.tags || metadata.tags));\nconst tags = Array.isArray(body.tags) ? body.tags : metadataTags;\nconst cleanTags = [...new Set(tags.map((tag) => text(tag)).filter(Boolean))].slice(0, 25);\nconst privacyStatus = ['private', 'unlisted', 'public'].includes(body.privacyStatus) ? body.privacyStatus : (['private', 'unlisted', 'public'].includes(youtubeMetadata.privacyStatus) ? youtubeMetadata.privacyStatus : 'private');\nconst categoryId = String(body.categoryId || youtubeMetadata.categoryId || '10');\nconst regionCode = String(body.regionCode || youtubeMetadata.regionCode || 'VN');\nconst madeForKids = Boolean(body.madeForKids || youtubeMetadata.madeForKids || false);\nconst duplicateKey = firstText(body.duplicateKey, publishingMetadata.duplicateKey, requestId);\n\nlet duplicateRecord = null;\nlet ledgerAvailable = false;\ntry {\n  const workflowStatic = typeof $getWorkflowStaticData === 'function' ? $getWorkflowStaticData('global') : null;\n  const ledger = workflowStatic && workflowStatic.youtubePublishLedger && typeof workflowStatic.youtubePublishLedger === 'object'\n    ? workflowStatic.youtubePublishLedger\n    : {};\n  ledgerAvailable = Boolean(workflowStatic);\n  duplicateRecord = duplicateKey && ledger[duplicateKey] ? ledger[duplicateKey] : null;\n} catch (error) {\n  ledgerAvailable = false;\n}\n\nconst missing = [];\nif (!requestId) missing.push('requestId');\nif (!artifactPageUrl) missing.push('artifactPageUrl');\nif (!finalVideoUrl) missing.push('finalVideoUrl');\nif (!thumbnailUrl) missing.push('thumbnailUrl');\nif (!title) missing.push('title');\nif (!descriptionBase) missing.push('description');\n\nconst gateBlocks = [];\nif (missing.length) gateBlocks.push(`missing:${missing.join(',')}`);\nif (!publishApproved) gateBlocks.push('approval_required');\nif (duplicateRecord) gateBlocks.push('duplicate_publish_key');\nif (!uploadEnabled) gateBlocks.push('upload_branch_disabled');\n\nconst ok = missing.length === 0;\nconst readyForUpload = ok && publishApproved && !duplicateRecord && uploadEnabled;\nconst responseCode = ok ? (duplicateRecord ? 409 : 200) : 400;\nconst status = !ok ? 'invalid_package' : duplicateRecord ? 'duplicate_blocked' : publishApproved ? 'approved_preflight_only' : 'preflight_only';\n\nreturn [{ json: {\n  ok,\n  responseCode,\n  status,\n  requestId,\n  publishApproved,\n  uploadEnabled,\n  readyForUpload,\n  duplicate: Boolean(duplicateRecord),\n  duplicateRecord,\n  ledgerAvailable,\n  gateBlocks,\n  message: ok\n    ? (duplicateRecord\n      ? `Duplicate publish blocked for key: ${duplicateKey}`\n      : (publishApproved ? 'Package passed validation and explicit approval. Upload remains disabled until the final publish switch is enabled.' : 'Package passed validation. Upload requires confirm=publish-to-youtube and approvalToken.'))\n    : `Package is missing required fields: ${missing.join(', ')}`,\n  missing,\n  uploadPlan: {\n    requestId,\n    duplicateKey,\n    finalVideoUrl,\n    thumbnailUrl,\n    artifactPageUrl,\n    title,\n    description,\n    tags: cleanTags,\n    tagsCsv: cleanTags.join(','),\n    privacyStatus,\n    categoryId,\n    regionCode,\n    madeForKids,\n    notifySubscribers: false\n  },\n  thumbnailPlan: {\n    sourceUrl: thumbnailUrl,\n    requiresVideoId: true,\n    endpoint: 'https://www.googleapis.com/upload/youtube/v3/thumbnails/set',\n    stagedNode: 'Set YouTube Thumbnail (disabled)'\n  },\n  rollbackPlan: {\n    deleteUploadedVideo: 'Use YouTube video delete by videoId if an accidental upload occurs.',\n    clearLedgerKey: duplicateKey ? `Remove youtubePublishLedger[${duplicateKey}] from workflow static data only after confirming YouTube rollback.` : '',\n    keepSourceArtifact: artifactPageUrl\n  }\n} }];"
+      },
+      "id": "ytpub-2",
+      "name": "Validate Publishing Package",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ ok: $json.ok, status: $json.status, requestId: $json.requestId, publishApproved: $json.publishApproved, uploadEnabled: $json.uploadEnabled, readyForUpload: $json.readyForUpload, duplicate: $json.duplicate, duplicateRecord: $json.duplicateRecord, ledgerAvailable: $json.ledgerAvailable, gateBlocks: $json.gateBlocks, missing: $json.missing, uploadPlan: $json.uploadPlan, thumbnailPlan: $json.thumbnailPlan, rollbackPlan: $json.rollbackPlan, message: $json.message }) }}",
+        "options": {
+          "responseCode": "={{ $json.responseCode }}"
+        }
+      },
+      "id": "ytpub-3",
+      "name": "Respond Upload Plan",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        780,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.uploadPlan.finalVideoUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "ytpub-4",
+      "name": "Download Final MP4 (disabled)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        780,
+        620
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.uploadPlan.title }}",
+        "regionCode": "={{ $json.uploadPlan.regionCode }}",
+        "categoryId": "={{ $json.uploadPlan.categoryId }}",
+        "binaryProperty": "data",
+        "options": {
+          "description": "={{ $json.uploadPlan.description }}",
+          "privacyStatus": "={{ $json.uploadPlan.privacyStatus }}",
+          "tags": "={{ $json.uploadPlan.tagsCsv }}",
+          "selfDeclaredMadeForKids": "={{ $json.uploadPlan.madeForKids }}",
+          "notifySubscribers": false
+        }
+      },
+      "id": "ytpub-5",
+      "name": "Upload Video to YouTube (disabled)",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        620
+      ],
+      "disabled": true,
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "qKuqfuucn02eTXsB",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.uploadPlan.thumbnailUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "thumbnail"
+            }
+          }
+        }
+      },
+      "id": "ytpub-6",
+      "name": "Download Thumbnail (disabled)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1300,
+        620
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={{ $json.id || $json.videoId || $json.uploadResult?.id }}&uploadType=media",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "thumbnail",
+        "options": {}
+      },
+      "id": "ytpub-7",
+      "name": "Set YouTube Thumbnail (disabled)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1560,
+        620
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst uploadPlan = item.uploadPlan || {};\nconst key = String(uploadPlan.duplicateKey || item.requestId || '').trim();\nif (!key) {\n  throw new Error('Cannot record YouTube publish ledger without duplicateKey');\n}\nconst workflowStatic = $getWorkflowStaticData('global');\nworkflowStatic.youtubePublishLedger = workflowStatic.youtubePublishLedger || {};\nworkflowStatic.youtubePublishLedger[key] = {\n  requestId: uploadPlan.requestId || item.requestId || key,\n  videoId: item.id || item.videoId || item.uploadResult?.id || null,\n  title: uploadPlan.title || null,\n  artifactPageUrl: uploadPlan.artifactPageUrl || null,\n  recordedAt: new Date().toISOString()\n};\nreturn [{ json: { ...item, ledgerRecorded: true, ledgerKey: key } }];"
+      },
+      "id": "ytpub-8",
+      "name": "Record Publish Ledger (disabled)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        620
+      ],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Publish Package Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Publishing Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Publishing Package": {
+      "main": [
+        [
+          {
+            "node": "Respond Upload Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Upload Plan": {
+      "main": [
+        [
+          {
+            "node": "Download Final MP4 (disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Final MP4 (disabled)": {
+      "main": [
+        [
+          {
+            "node": "Upload Video to YouTube (disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Video to YouTube (disabled)": {
+      "main": [
+        [
+          {
+            "node": "Download Thumbnail (disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Thumbnail (disabled)": {
+      "main": [
+        [
+          {
+            "node": "Set YouTube Thumbnail (disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set YouTube Thumbnail (disabled)": {
+      "main": [
+        [
+          {
+            "node": "Record Publish Ledger (disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "timezone": "Asia/Ho_Chi_Minh"
+  }
+}

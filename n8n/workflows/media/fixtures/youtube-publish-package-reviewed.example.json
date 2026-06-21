@@ -1,0 +1,50 @@
+{
+  "requestId": "music-video-loop-reviewed-YYYYMMDD-HHMM",
+  "artifactPageUrl": "https://media.example.com/artifacts/music-video-loop-reviewed-YYYYMMDD-HHMM",
+  "finalVideoUrl": "https://media.example.com/artifacts/music-video-loop-reviewed-YYYYMMDD-HHMM/final.mp4",
+  "thumbnailUrl": "https://media.example.com/artifacts/music-video-loop-reviewed-YYYYMMDD-HHMM/thumbnail.jpg",
+  "metadata": {
+    "requestId": "music-video-loop-reviewed-YYYYMMDD-HHMM",
+    "profile": "music_video_loop",
+    "musicRequest": {
+      "tags": [
+        "cinematic",
+        "uplifting"
+      ],
+      "lyrics": "",
+      "instrumental": true,
+      "duration": 120,
+      "bpm": 90,
+      "key": "C major",
+      "timeSignature": "4",
+      "language": "en",
+      "seed": 123,
+      "taskType": "generate",
+      "styleTags": [
+        "orchestral",
+        "ambient"
+      ]
+    },
+    "youtube": {
+      "title": "Reviewed Private Upload Title",
+      "description": "Reviewed description. Include credits, provenance, and source artifact context here.",
+      "tags": [
+        "ai music",
+        "cinematic music",
+        "openclaw"
+      ],
+      "privacyStatus": "private",
+      "categoryId": "10",
+      "regionCode": "VN",
+      "madeForKids": false
+    },
+    "publishing": {
+      "duplicateKey": "music-video-loop-reviewed-YYYYMMDD-HHMM",
+      "source": "media-worker-callback",
+      "approvalRequired": true,
+      "approvalMode": "manual-token",
+      "reviewedBy": "Andy",
+      "reviewedAt": "YYYY-MM-DDTHH:mm:ss+07:00"
+    }
+  }
+}
