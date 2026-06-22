@@ -72,6 +72,19 @@ Reviewed package fixture:
 n8n/workflows/media/fixtures/youtube-publish-package-reviewed.example.json
 ```
 
+Local dry-run gate:
+
+```bash
+node scripts/youtube-publish-package-dry-run.mjs --json
+node scripts/youtube-publish-package-regression.mjs
+```
+
+The dry-run gate performs no n8n or YouTube API calls. It validates required
+package fields, URL shape, reviewed title/description/tags, privacy,
+language, made-for-kids, duplicate key, thumbnail plan, and rollback plan. A
+passing unapproved package returns `preflight_only` with `approval_required` and
+`upload_branch_disabled`.
+
 Use the fixture as the callback-to-publishing handoff shape for the first real
 preflight. Replace placeholder URLs and review fields with the selected artifact
 package before submitting it to the workflow.

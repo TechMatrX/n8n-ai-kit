@@ -1,0 +1,86 @@
+{
+  "requestId": "happy-birthday-lucy-music-video-20260619120120-ltxv-sheet",
+  "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/",
+  "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet-music-video.mp4",
+  "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet-youtube-thumbnail.png",
+  "metadata": {
+    "requestId": "happy-birthday-lucy-music-video-20260619120120-ltxv-sheet",
+    "profile": "music_video_loop",
+    "musicRequest": {
+      "tags": [
+        "happy birthday",
+        "piano",
+        "sheet music",
+        "warm celebration"
+      ],
+      "lyrics": "Happy Birthday Lucy",
+      "instrumental": false,
+      "duration": 120,
+      "bpm": 90,
+      "key": "C major",
+      "timeSignature": "4",
+      "language": "en",
+      "seed": 1781870481228,
+      "taskType": "generate",
+      "styleTags": [
+        "birthday",
+        "piano",
+        "sheet music"
+      ]
+    },
+    "youtube": {
+      "title": "Happy Birthday Lucy - Piano Sheet Music Video",
+      "description": "A warm happy birthday music video for Lucy with a simple animated sheet-music visual and cheerful piano arrangement.",
+      "tags": [
+        "happy birthday",
+        "birthday song",
+        "piano music",
+        "sheet music",
+        "Lucy",
+        "birthday music"
+      ],
+      "privacyStatus": "public",
+      "categoryId": "10",
+      "regionCode": "VN",
+      "language": "en",
+      "madeForKids": false,
+      "approvalToken": "public-ok-happy-birthday-lucy-20260622"
+    },
+    "publishing": {
+      "duplicateKey": "happy-birthday-lucy-music-video-20260619120120-ltxv-sheet",
+      "source": "manual-visual-replacement",
+      "approvalRequired": true,
+      "approvalMode": "manual-token",
+      "reviewedBy": "Andy",
+      "reviewedAt": "2026-06-22T15:19:02.496Z"
+    },
+    "artifacts": {
+      "audioUrl": "http://100.73.253.62:9000/openclaw-media/generated/audio/2026/06/22/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/acestep-turbo_00075.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260622%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260622T151436Z&X-Amz-Expires=604800&X-Amz-Signature=cc4cda319e43ce43c8cf7bb5ffdda64cf8916956500f92b8ab74e0a312f1eacc&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+      "sourceCoverUrl": "http://100.73.253.62:9000/openclaw-media/generated/image/2026/06/22/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/happy-birthday-lucy-sheet-cover.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260622%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260622T151438Z&X-Amz-Expires=604800&X-Amz-Signature=3c137611cc8091e7d7b9f1ac991baad5a5f81791e0cc98b85ae6be5f3988f8f3&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+      "shortVideoUrl": "http://100.73.253.62:9000/openclaw-media/generated/video/2026/06/22/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/happy-birthday-lucy-sheet-animation-5s.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260622%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260622T151439Z&X-Amz-Expires=604800&X-Amz-Signature=659267b2965fc492e7fd94ee43d5be58fdfe763ebf66cdeea9f9b8b1ee1cd099&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject"
+    },
+    "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/",
+    "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet-music-video.mp4",
+    "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet/happy-birthday-lucy-music-video-20260619120120-ltxv-sheet-youtube-thumbnail.png",
+    "title": "Happy Birthday Lucy - Piano Sheet Music Video",
+    "description": "A warm happy birthday music video for Lucy with a simple animated sheet-music visual and cheerful piano arrangement.",
+    "tags": [
+      "happy birthday",
+      "birthday song",
+      "piano music",
+      "sheet music",
+      "Lucy",
+      "birthday music"
+    ]
+  },
+  "title": "Happy Birthday Lucy - Piano Sheet Music Video",
+  "description": "A warm happy birthday music video for Lucy with a simple animated sheet-music visual and cheerful piano arrangement.",
+  "tags": [
+    "happy birthday",
+    "birthday song",
+    "piano music",
+    "sheet music",
+    "Lucy",
+    "birthday music"
+  ]
+}
