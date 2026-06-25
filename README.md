@@ -158,14 +158,18 @@ Notes:
 The stack supports env-controlled image pins for the main runtime components:
 
 ```bash
-N8N_IMAGE=n8nio/n8n:2.23.4
-N8N_RUNNERS_IMAGE=n8nio/runners:2.23.4
+N8N_IMAGE=n8nio/n8n:2.27.4
+N8N_RUNNERS_IMAGE=n8nio/runners:2.27.4
 OLLAMA_IMAGE=ollama/ollama:latest
 ```
 
 For NAS deployments, prefer updating these env values and then recreating the
 affected services through Docker Compose instead of clicking update directly in
 the container UI.
+
+Use [`NAS-UPGRADE-RUNBOOK.md`](NAS-UPGRADE-RUNBOOK.md) for live NAS upgrades.
+It captures backup, rebuild, Synology-safe fallback, recovery, and validation
+steps.
 
 To open n8n at any time, visit <http://localhost:5678/> in your browser.
 

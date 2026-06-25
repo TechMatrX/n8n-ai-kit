@@ -93,7 +93,7 @@ services:
       - ${NAS_ROOT:?set NAS_ROOT in .env}/n8n-files:/home/node/.n8n-files
 
   task-runners:
-    image: ${N8N_RUNNERS_IMAGE:-n8nio/runners:2.23.4}
+    image: ${N8N_RUNNERS_IMAGE:-n8nio/runners:2.27.4}
     container_name: n8n-runners
     restart: unless-stopped
     networks: ['demo']

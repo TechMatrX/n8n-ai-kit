@@ -2,6 +2,8 @@
 set -eo pipefail
 
 SKIP_BUILD=false
+BUILD_INLINE_CACHE=true
+BUILD_TIMEOUT="${N8N_BUILD_TIMEOUT:-900}"
 COMPOSE_ARGS=()
 HAS_TASK_RUNNERS=false
 
@@ -11,9 +13,17 @@ while [[ $# -gt 0 ]]; do
             SKIP_BUILD=true
             shift
             ;;
+        --no-inline-cache)
+            BUILD_INLINE_CACHE=false
+            shift
+            ;;
+        --build-timeout)
+            BUILD_TIMEOUT="${2:?missing build timeout seconds}"
+            shift 2
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--skip-build]"
+            echo "Usage: $0 [--skip-build] [--no-inline-cache] [--build-timeout <seconds>]"
             exit 1
             ;;
     esac
@@ -21,6 +31,8 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
+
+DOCKER_BIN="${DOCKER_BIN:-docker}"
 
 if [ -f "./docker-compose.nas.yml" ] && [ -f "./.env" ]; then
     set -a
@@ -34,10 +46,10 @@ if [ -f "./docker-compose.nas.yml" ] && [ -f "./.env" ]; then
 fi
 
 docker_compose() {
-    docker compose "${COMPOSE_ARGS[@]}" "$@"
+    "${DOCKER_BIN}" compose "${COMPOSE_ARGS[@]}" "$@"
 }
 
-if docker compose "${COMPOSE_ARGS[@]}" config --services 2>/dev/null | grep -qx "task-runners"; then
+if docker_compose config --services 2>/dev/null | grep -qx "task-runners"; then
     HAS_TASK_RUNNERS=true
 fi
 
@@ -57,7 +69,11 @@ fi
 if [ "${SKIP_BUILD}" = true ]; then
     echo "Skipping build as requested"
 else
-    ./n8n-build.sh
+    build_args=(--timeout "${BUILD_TIMEOUT}")
+    if [ "${BUILD_INLINE_CACHE}" = false ]; then
+        build_args+=(--no-inline-cache)
+    fi
+    DOCKER_BIN="${DOCKER_BIN}" ./n8n-build.sh "${build_args[@]}"
 fi
 
 echo "Starting updated stack..."
@@ -82,3 +98,6 @@ for i in {1..12}; do
 done
 
 docker_compose ps n8n
+
+echo "Runtime version:"
+docker_compose exec -T n8n n8n --version || true

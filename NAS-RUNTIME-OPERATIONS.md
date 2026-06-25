@@ -128,7 +128,7 @@ after validation so the repo remains the recovery/source reference.
 Expected services:
 
 - `n8n` exposes the task broker on `0.0.0.0:5679`
-- `task-runners` uses `n8nio/runners:2.23.4`
+- `task-runners` uses `n8nio/runners:2.27.4`
 - JavaScript runner health check port: `5681`
 - Python runner health check port: `5682`
 - Launcher health check port: `5680`
@@ -177,6 +177,24 @@ Run from:
 
 ```bash
 cd /volume1/docker/n8n-ai-kit/n8n-nas-bundle
+```
+
+For version upgrades, use the dedicated upgrade runbook:
+
+```text
+NAS-UPGRADE-RUNBOOK.md
+```
+
+The short version is:
+
+```bash
+sudo ./n8n-update.sh
+```
+
+If Synology Docker stalls during inline-cache export, use:
+
+```bash
+sudo ./n8n-update.sh --no-inline-cache --build-timeout 1800
 ```
 
 ### Status
