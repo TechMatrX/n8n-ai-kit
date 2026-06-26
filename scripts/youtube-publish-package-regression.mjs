@@ -23,6 +23,8 @@ assert.equal(preflight.uploadPlan.language, "en");
 assert.equal(preflight.uploadPlan.description.includes(fixture.artifactPageUrl), false);
 assert.equal(preflight.uploadPlan.description.includes("Source artifact package"), false);
 assert.equal(preflight.rollbackPlan.keepSourceArtifact, fixture.artifactPageUrl);
+assert.equal(preflight.uploadPlan.finalVideoRole, null);
+assert.equal(preflight.uploadPlan.thumbnailRole, null);
 
 const approved = validateYouTubePublishPackage(fixture, {
   approve: true,
@@ -58,5 +60,27 @@ delete missingMadeForKids.metadata.youtube.madeForKids;
 const missingMadeForKidsResult = validateYouTubePublishPackage(missingMadeForKids);
 assert.equal(missingMadeForKidsResult.ok, false);
 assert.ok(missingMadeForKidsResult.missing.includes("metadata.youtube.madeForKids"));
+
+const callbackShape = clone(fixture);
+delete callbackShape.finalVideoUrl;
+delete callbackShape.thumbnailUrl;
+callbackShape.assets = [
+  {
+    role: "cover",
+    mediaType: "image",
+    downloadUrl: "https://media.example.com/artifacts/music-video-loop-reviewed-YYYYMMDD-HHMM/cover.png",
+  },
+  {
+    role: "primary_video",
+    mediaType: "video",
+    downloadUrl: "https://media.example.com/artifacts/music-video-loop-reviewed-YYYYMMDD-HHMM/final.mp4",
+  },
+];
+const callbackShapeResult = validateYouTubePublishPackage(callbackShape);
+assert.equal(callbackShapeResult.ok, true);
+assert.equal(callbackShapeResult.uploadPlan.finalVideoRole, "primary_video");
+assert.equal(callbackShapeResult.uploadPlan.thumbnailRole, "cover");
+assert.equal(callbackShapeResult.uploadPlan.artifactCount, 2);
+assert.deepEqual(callbackShapeResult.uploadPlan.artifactRoles, ["cover", "primary_video"]);
 
 console.log("youtube publish package regression: ok");

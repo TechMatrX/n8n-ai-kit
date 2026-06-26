@@ -53,6 +53,11 @@ remains disabled.
 
 Publishing hardening currently staged:
 
+- package validation can now derive `finalVideoUrl` and `thumbnailUrl` from
+  callback-style `assets` / `artifactMetadata` using artifact roles before
+  falling back to legacy top-level URLs
+- role-aware plans preserve `finalVideoRole`, `thumbnailRole`,
+  `artifactCount`, and `artifactRoles` so the reviewed upload plan is traceable
 - duplicate-publish detection reads `youtubePublishLedger` from workflow static
   data and blocks known duplicate keys before upload
 - the ledger-write node is placed after upload and thumbnail update, but remains

@@ -68,6 +68,13 @@ function arrayFrom(value) {
   return String(value || "").split(",");
 }
 
+function arrayOfObjects(...values) {
+  for (const value of values) {
+    if (Array.isArray(value)) return value.filter(isPlainObject);
+  }
+  return [];
+}
+
 function isPlainObject(value) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
@@ -90,6 +97,25 @@ function explicitBoolean(...values) {
   return undefined;
 }
 
+function assetUrl(asset) {
+  return firstText(asset.downloadUrl, asset.publicUrl, asset.url, asset.storage?.downloadUrl, asset.href);
+}
+
+function assetRole(asset) {
+  return text(asset.role).toLowerCase();
+}
+
+function assetMediaType(asset) {
+  return text(asset.mediaType || asset.type).toLowerCase();
+}
+
+function pickAssetUrl(assets, roleMatchers, mediaTypes) {
+  const byRole = assets.find((asset) => roleMatchers.some((matcher) => matcher.test(assetRole(asset))) && assetUrl(asset));
+  if (byRole) return assetUrl(byRole);
+  const byType = assets.find((asset) => mediaTypes.includes(assetMediaType(asset)) && assetUrl(asset));
+  return byType ? assetUrl(byType) : "";
+}
+
 export function validateYouTubePublishPackage(input, options = {}) {
   const body = input.body ?? input;
   const expectedToken = text(options.expectedApprovalToken);
@@ -107,9 +133,14 @@ export function validateYouTubePublishPackage(input, options = {}) {
   const musicMetadata = isPlainObject(metadata.musicRequest) ? metadata.musicRequest : {};
 
   const requestId = firstText(body.requestId, metadata.requestId);
+  const assets = arrayOfObjects(body.assets, artifacts.assets, body.assetMetadata, artifacts.assetMetadata);
+  const finalVideoFromAssets = pickAssetUrl(assets, [/^primary_video$/, /final.*video/, /video/], ["video"]);
+  const thumbnailFromAssets = pickAssetUrl(assets, [/^cover$/, /^thumbnail$/, /thumb/, /poster/], ["image"]);
   const artifactPageUrl = firstText(body.artifactPageUrl, artifacts.pageUrl, artifacts.artifactPageUrl);
-  const finalVideoUrl = firstText(body.finalVideoUrl, artifacts.finalVideoUrl, artifacts.mp4Url, artifacts.videoUrl);
-  const thumbnailUrl = firstText(body.thumbnailUrl, artifacts.thumbnailUrl);
+  const finalVideoUrl = firstText(body.finalVideoUrl, artifacts.finalVideoUrl, artifacts.mp4Url, artifacts.videoUrl, finalVideoFromAssets);
+  const thumbnailUrl = firstText(body.thumbnailUrl, artifacts.thumbnailUrl, thumbnailFromAssets);
+  const finalVideoRole = assets.find((asset) => assetUrl(asset) === finalVideoUrl)?.role || null;
+  const thumbnailRole = assets.find((asset) => assetUrl(asset) === thumbnailUrl)?.role || null;
   const title = clamp(firstText(body.title, youtubeMetadata.title, publishingMetadata.title, metadata.title), 100);
   const descriptionBase = firstText(
     body.description,
@@ -197,6 +228,10 @@ export function validateYouTubePublishPackage(input, options = {}) {
       finalVideoUrl,
       thumbnailUrl,
       artifactPageUrl,
+      finalVideoRole,
+      thumbnailRole,
+      artifactCount: assets.length,
+      artifactRoles: assets.map((asset) => asset.role).filter(Boolean),
       title,
       description,
       tags,
