@@ -46,10 +46,11 @@ submit request.
 
 Live workflow ID: `K1Sbm9sc6QQJNeTR`
 
-This inactive workflow validates a completed artifact package and now falls back
-to `metadata.youtube` / `metadata.publishing` for title, description, tags,
-privacy, category, region, and made-for-kids values. The YouTube upload branch
-remains disabled.
+This workflow is active as a preflight endpoint only. It validates a completed
+artifact package and falls back to `metadata.youtube` / `metadata.publishing`
+for title, description, tags, privacy, category, region, and made-for-kids
+values. The YouTube upload branch remains disabled and disconnected from the
+active preflight path.
 
 Publishing hardening currently staged:
 
@@ -66,6 +67,10 @@ Publishing hardening currently staged:
   `Set YouTube Thumbnail (disabled)` against YouTube's thumbnail upload endpoint
 - response payload includes `gateBlocks`, `thumbnailPlan`, and `rollbackPlan`
 - dry-run execution `7272` returned `preflight_only` with no external upload
+- live preflight execution `14929` used a real `music_video_loop` package and
+  returned `preflight_only` with `finalVideoRole=primary_video`,
+  `thumbnailRole=cover`, `artifactCount=5`, and only three nodes executed:
+  webhook, validator, and response
 
 Real publishing still requires enabling the upload/thumbnail/ledger branch,
 confirming the `YOUTUBE_PUBLISH_APPROVAL_TOKEN` positive path, and running the
