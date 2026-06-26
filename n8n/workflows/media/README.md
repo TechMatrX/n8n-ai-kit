@@ -92,27 +92,31 @@ Safety gates:
 - requires `YOUTUBE_PUBLISH_APPROVAL_TOKEN`
 - requires `privacyStatus=private`
 - blocks duplicate publish keys
-- writes the publish ledger only after upload and thumbnail handling complete
+- writes the publish ledger immediately after upload, before optional thumbnail
+  handling
 
 Validation status:
 
-- n8n validation: 0 errors, 9 expected warnings from dynamic URLs, error
+- n8n validation: 0 errors, 8 expected warnings from dynamic URLs, error
   handling suggestions, and the guarded IF branch
 - inactive trigger test correctly refused execution
 - first controlled private upload created YouTube video `FHJKJSsnkHw`, then
   failed at custom thumbnail upload with YouTube `403` because the authenticated
   channel does not have custom thumbnail permission
-- because the thumbnail failure happened before the ledger node, the workflow
-  now includes a duplicate guard for the reviewed package key
+- the workflow now records the ledger before thumbnail handling and includes a
+  duplicate guard for the reviewed package key
   `happy-birthday-lucy-music-video-20260619120120-ltxv-sheet`
+- duplicate guard proof execution `15036` returned HTTP `409` /
+  `duplicate_blocked` and ran only the four gate nodes; no download, upload,
+  thumbnail, or ledger branch executed
 
 Follow-up before another private publish:
 
 - keep the workflow inactive until the next controlled test
-- move ledger recording immediately after the video upload, before thumbnail
-  handling
-- make thumbnail upload non-fatal or skip it until the YouTube channel has
-  custom thumbnail permission
+- make a fresh reviewed package for the next publish test, or intentionally
+  clear the duplicate guard only after confirming rollback/deletion
+- enable YouTube custom-thumbnail permission for the channel when ready; until
+  then thumbnail upload is optional/non-fatal
 
 Reviewed package fixture:
 

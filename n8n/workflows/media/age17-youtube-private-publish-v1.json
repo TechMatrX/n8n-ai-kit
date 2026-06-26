@@ -9,7 +9,7 @@
     "validation": {
       "valid": true,
       "errors": 0,
-      "warnings": 9
+      "warnings": 8
     },
     "safety": {
       "inactive": true,
@@ -202,11 +202,12 @@
         1800,
         220
       ],
-      "disabled": false
+      "disabled": false,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst uploadPlan = $('Validate Private Publish Gate').first().json.uploadPlan || {};\nconst upload = $('Upload Private Video to YouTube').first().json || {};\nconst key = String(uploadPlan.duplicateKey || uploadPlan.requestId || '').trim();\nif (!key) {\n  throw new Error('Cannot record YouTube publish ledger without duplicateKey');\n}\nconst videoId = upload.id || upload.videoId || upload.uploadId || upload.uploadResult?.id || null;\nconst workflowStatic = $getWorkflowStaticData('global');\nworkflowStatic.youtubePublishLedger = workflowStatic.youtubePublishLedger || {};\nworkflowStatic.youtubePublishLedger[key] = {\n  requestId: uploadPlan.requestId || key,\n  videoId,\n  title: uploadPlan.title || null,\n  privacyStatus: 'private',\n  artifactPageUrl: uploadPlan.artifactPageUrl || null,\n  recordedAt: new Date().toISOString()\n};\nreturn [{ json: { ...item, uploadPlan, youtubeUpload: upload, videoId, ledgerRecorded: true, ledgerKey: key } }];"
+        "jsCode": "const item = $input.first().json;\nconst uploadPlan = $('Validate Private Publish Gate').first().json.uploadPlan || {};\nconst upload = $('Upload Private Video to YouTube').first().json || {};\nconst key = String(uploadPlan.duplicateKey || uploadPlan.requestId || '').trim();\nif (!key) {\n  throw new Error('Cannot record YouTube publish ledger without duplicateKey');\n}\nconst videoId = upload.id || upload.videoId || upload.uploadId || upload.uploadResult?.id || null;\nconst workflowStatic = $getWorkflowStaticData('global');\nworkflowStatic.youtubePublishLedger = workflowStatic.youtubePublishLedger || {};\nworkflowStatic.youtubePublishLedger[key] = {\n  requestId: uploadPlan.requestId || key,\n  videoId,\n  title: uploadPlan.title || null,\n  privacyStatus: 'private',\n  artifactPageUrl: uploadPlan.artifactPageUrl || null,\n  recordedAt: new Date().toISOString(),\n  thumbnailStatus: 'pending'\n};\nreturn [{ json: { ...item, uploadPlan, youtubeUpload: upload, videoId, uploadId: videoId, ledgerRecorded: true, ledgerKey: key, thumbnailStatus: 'pending' } }];"
       },
       "id": "ytpriv-9",
       "name": "Record Private Publish Ledger",
@@ -221,7 +222,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ ({ ok: true, status: 'private_publish_recorded', requestId: $('Validate Private Publish Gate').first().json.requestId, videoId: $json.videoId, ledgerRecorded: $json.ledgerRecorded, ledgerKey: $json.ledgerKey, uploadPlan: $json.uploadPlan, youtubeUpload: $json.youtubeUpload }) }}",
+        "responseBody": "={{ (() => { const ledger = $('Record Private Publish Ledger').first().json; const thumbnail = $json || {}; const thumbnailError = thumbnail.error || thumbnail.message || null; return { ok: true, status: thumbnailError ? 'private_publish_recorded_thumbnail_failed' : 'private_publish_recorded', requestId: $('Validate Private Publish Gate').first().json.requestId, videoId: ledger.videoId, ledgerRecorded: ledger.ledgerRecorded, ledgerKey: ledger.ledgerKey, uploadPlan: ledger.uploadPlan, youtubeUpload: ledger.youtubeUpload, thumbnailAttempted: true, thumbnailSet: !thumbnailError, thumbnailError }; })() }}",
         "options": {
           "responseCode": 200
         }
@@ -292,7 +293,7 @@
       "main": [
         [
           {
-            "node": "Download Thumbnail",
+            "node": "Record Private Publish Ledger",
             "type": "main",
             "index": 0
           }
@@ -314,7 +315,7 @@
       "main": [
         [
           {
-            "node": "Record Private Publish Ledger",
+            "node": "Respond Private Publish Complete",
             "type": "main",
             "index": 0
           }
@@ -325,7 +326,7 @@
       "main": [
         [
           {
-            "node": "Respond Private Publish Complete",
+            "node": "Download Thumbnail",
             "type": "main",
             "index": 0
           }
