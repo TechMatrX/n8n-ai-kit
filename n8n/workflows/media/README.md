@@ -99,6 +99,20 @@ Validation status:
 - n8n validation: 0 errors, 9 expected warnings from dynamic URLs, error
   handling suggestions, and the guarded IF branch
 - inactive trigger test correctly refused execution
+- first controlled private upload created YouTube video `FHJKJSsnkHw`, then
+  failed at custom thumbnail upload with YouTube `403` because the authenticated
+  channel does not have custom thumbnail permission
+- because the thumbnail failure happened before the ledger node, the workflow
+  now includes a duplicate guard for the reviewed package key
+  `happy-birthday-lucy-music-video-20260619120120-ltxv-sheet`
+
+Follow-up before another private publish:
+
+- keep the workflow inactive until the next controlled test
+- move ledger recording immediately after the video upload, before thumbnail
+  handling
+- make thumbnail upload non-fatal or skip it until the YouTube channel has
+  custom thumbnail permission
 
 Reviewed package fixture:
 
