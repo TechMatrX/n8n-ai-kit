@@ -1,0 +1,1211 @@
+erDiagram
+    agent_chat_subscriptions {
+      character_varying(36) agentId PK,FK
+      character_varying(64) integrationType PK
+      character_varying(255) credentialId PK
+      character_varying(255) threadId PK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_chat_subscriptions }o--o| agents : FK_e79153bd179c011e779d5016796
+    agent_checkpoints {
+      character_varying(255) runId PK
+      character_varying(255) agentId FK
+      text state
+      boolean expired
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_checkpoints }o--o| agents : FK_5e31c210f896d539964bf99fe32
+    agent_execution {
+      character_varying(36) id PK
+      character_varying(128) threadId FK
+      character_varying(16) status
+      timestamptz(3) startedAt
+      timestamptz(3) stoppedAt
+      integer duration
+      text userMessage
+      text assistantResponse
+      character_varying(255) model
+      integer promptTokens
+      integer completionTokens
+      integer totalTokens
+      double_precision cost
+      json toolCalls
+      json timeline
+      text error
+      character_varying(16) hitlStatus
+      character_varying(32) source
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_execution }o--o| agent_execution_threads : FK_add2432fb6034cc18b6af299dce
+    agent_execution_threads {
+      character_varying(128) id PK
+      character_varying(36) agentId FK
+      character_varying(255) agentName
+      character_varying(255) projectId FK
+      integer sessionNumber
+      integer totalPromptTokens
+      integer totalCompletionTokens
+      double_precision totalCost
+      integer totalDuration
+      character_varying(255) title
+      character_varying(8) emoji
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(32) taskId
+      character_varying(36) taskVersionId FK
+      character_varying(128) parentThreadId
+      character_varying(36) parentAgentId
+    }
+    agent_execution_threads }o--o| agents : FK_0468a9dc35597314e641d4722aa
+    agent_execution_threads }o--o| project : FK_0e2f8bf92a7a9c88b89670f701c
+    agent_execution_threads }o--o| agent_history : FK_f00b52d74fe11838e1fe086deea
+    agent_files {
+      character_varying(16) id PK
+      character_varying(36) agentId FK
+      text binaryDataId
+      character_varying(255) fileName
+      character_varying(255) mimeType
+      integer fileSizeBytes
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_files }o--o| agents : FK_aca4514cb500494b64356c2e164
+    agent_history {
+      character_varying(36) versionId PK
+      character_varying(36) agentId FK
+      json schema
+      json tools
+      json skills
+      uuid publishedById FK
+      character_varying(255) author
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_history }o--o| user : FK_8771675f44c58fb40e0feb9ee35
+    agent_history }o--o| agents : FK_87cd5a8da20304b089ea2f83fec
+    agent_task_definition {
+      character_varying(32) id PK
+      character_varying(36) agentId FK
+      character_varying(128) name
+      text objective
+      character_varying(128) cronExpression
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_task_definition }o--o| agents : FK_f45d0535a2ed59b6c2dd6da98a0
+    agent_task_run_lock {
+      character_varying(36) agentId PK,FK
+      character_varying(32) taskId PK
+      uuid holderId
+      timestamptz(3) heldUntil
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_task_run_lock }o--o| agents : FK_b57a2862ae869aab24e54cefd48
+    agent_task_snapshot {
+      character_varying(36) versionId PK,FK
+      character_varying(32) taskId PK
+      boolean enabled
+      character_varying(128) name
+      text objective
+      character_varying(128) cronExpression
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agent_task_snapshot }o--o| agent_history : FK_1acedce6690392ef1611cca8b88
+    agents {
+      character_varying(36) id PK
+      character_varying(128) name
+      character_varying(512) description
+      character_varying(255) projectId FK
+      json integrations
+      json schema
+      json tools
+      json skills
+      character_varying(36) versionId
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(36) activeVersionId FK
+    }
+    agents }o--o| agent_history : FK_940597dfe9753375309ce6aeea0
+    agents }o--o| project : FK_a30d560207c4071d98aa03c179c
+    agents_memory_entries {
+      character_varying(36) id PK
+      character_varying(36) agentId FK
+      character_varying(255) resourceId FK
+      text content
+      character_varying(64) contentHash
+      character_varying(16) status
+      character_varying(36) supersededBy FK
+      character_varying(128) embeddingModel
+      json embedding
+      json metadata
+      timestamptz(3) lastSeenAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_memory_entries }o--o| agents_memory_entries : FK_0edf1226b77ddc525eae4938079
+    agents_memory_entries }o--o| agents_resources : FK_1443a75e59adbfb796071d66393
+    agents_memory_entries }o--o| agents : FK_28e981fb675e9b44ce02f0ec1dd
+    agents_memory_entry_cursors {
+      character_varying(36) agentId PK,FK
+      character_varying(255) observationScopeId PK,FK
+      character_varying(36) lastIndexedObservationId
+      timestamptz(3) lastIndexedObservationCreatedAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_memory_entry_cursors }o--o| agents_threads : FK_069e791e428391a5569e7a96b20
+    agents_memory_entry_cursors }o--o| agents : FK_746780fd115e5e4352457a3c617
+    agents_memory_entry_locks {
+      character_varying(36) agentId PK,FK
+      character_varying(255) resourceId PK,FK
+      character_varying(64) holderId
+      timestamptz(3) heldUntil
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_memory_entry_locks }o--o| agents : FK_0ccf6d9ea6f44fa1c264fc2f795
+    agents_memory_entry_locks }o--o| agents_resources : FK_9594c0983cfee1c8ff49b05848b
+    agents_memory_entry_sources {
+      character_varying(36) id PK
+      character_varying(36) agentId FK
+      character_varying(36) memoryEntryId FK
+      character_varying(36) observationId FK
+      character_varying(255) threadId FK
+      character_varying(64) evidenceHash
+      text evidenceText
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_memory_entry_sources }o--o| agents_threads : FK_451d387a182fa8dd8002dfc3a77
+    agents_memory_entry_sources }o--o| agents_memory_entries : FK_4706f6223313959b7437a2b48df
+    agents_memory_entry_sources }o--o| agents : FK_c38e8a57a36b880e39a52ada2e8
+    agents_memory_entry_sources }o--o| agents_observations : FK_cb7c15d22fd068a0806aa57fc03
+    agents_messages {
+      character_varying(36) id PK
+      character_varying(255) threadId FK
+      character_varying(255) resourceId
+      character_varying(36) role
+      character_varying(36) type
+      json content
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_messages }o--o| agents_threads : FK_0a8057a61afabd2999608ffd0d9
+    agents_observation_cursors {
+      character_varying(36) agentId PK,FK
+      character_varying(255) observationScopeId PK,FK
+      character_varying(36) lastObservedMessageId
+      timestamptz(3) lastObservedAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_observation_cursors }o--o| agents : FK_64e92819f4b413661ed6e2c3c3d
+    agents_observation_cursors }o--o| agents_threads : FK_87aa187d27ea67eafd164905154
+    agents_observation_locks {
+      character_varying(36) agentId PK,FK
+      character_varying(255) observationScopeId PK,FK
+      character_varying(20) taskKind PK
+      character_varying(64) holderId
+      timestamptz(3) heldUntil
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_observation_locks }o--o| agents : FK_093e44ae20f2518e97d83a95433
+    agents_observation_locks }o--o| agents_threads : FK_6b55089892e447c2f82e5ec60ed
+    agents_observations {
+      character_varying(36) id PK
+      character_varying(36) agentId FK
+      character_varying(255) observationScopeId FK
+      character_varying(16) marker
+      text text
+      character_varying(36) parentId FK
+      integer tokenCount
+      character_varying(16) status
+      character_varying(36) supersededBy FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_observations }o--o| agents_observations : FK_127ee1078ffa952bb37b511efad
+    agents_observations }o--o| agents_threads : FK_4cfd8a70ebb0a5b0cf047dca3cf
+    agents_observations }o--o| agents_observations : FK_501e2d1701a10e24fb69ab5fc5f
+    agents_observations }o--o| agents : FK_d206432be97b7ed88d187479b1b
+    agents_resources {
+      character_varying(255) id PK
+      text metadata
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    agents_threads {
+      character_varying(128) id PK
+      character_varying(255) resourceId
+      character_varying(255) title
+      text metadata
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    ai_builder_temporary_workflow {
+      character_varying(36) workflowId PK,FK
+      uuid threadId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    ai_builder_temporary_workflow }o--o| instance_ai_threads : FK_39b07732e819fb561d74c38763f
+    ai_builder_temporary_workflow |o--o| workflow_entity : FK_85a87a1ba0f61999fe11dc56325
+    annotation_tag_entity {
+      character_varying(16) id PK
+      character_varying(24) name
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    auth_identity {
+      uuid userId FK
+      character_varying(255) providerId PK
+      character_varying(32) providerType PK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    auth_identity }o--o| user : auth_identity_userId_fkey
+    auth_provider_sync_history {
+      serial id PK
+      character_varying(32) providerType
+      text runMode
+      text status
+      timestamptz(3) startedAt
+      timestamptz(3) endedAt
+      integer scanned
+      integer created
+      integer updated
+      integer disabled
+      text error
+    }
+    binary_data {
+      uuid fileId PK
+      character_varying(50) sourceType
+      character_varying(255) sourceId
+      bytea data
+      character_varying(255) mimeType
+      character_varying(255) fileName
+      integer fileSize
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    chat_hub_agent_tools {
+      uuid agentId PK,FK
+      uuid toolId PK,FK
+    }
+    chat_hub_agent_tools }o--o| chat_hub_agents : FK_2b53d796b3dbae91b1a9553c048
+    chat_hub_agent_tools }o--o| chat_hub_tools : FK_43e70f04c53344f82483d0570f6
+    chat_hub_agents {
+      uuid id PK
+      character_varying(256) name
+      character_varying(512) description
+      text systemPrompt
+      uuid ownerId FK
+      character_varying(36) credentialId FK
+      character_varying(16) provider
+      character_varying(64) model
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json icon
+      json files
+      json suggestedPrompts
+    }
+    chat_hub_agents }o--o| user : FK_441ba2caba11e077ce3fbfa2cd8
+    chat_hub_agents }o--o| credentials_entity : FK_9c61ad497dcbae499c96a6a78ba
+    chat_hub_messages {
+      uuid id PK
+      uuid sessionId FK
+      uuid previousMessageId FK
+      uuid revisionOfMessageId FK
+      uuid retryOfMessageId FK
+      character_varying(16) type
+      character_varying(128) name
+      text content
+      character_varying(16) provider
+      character_varying(256) model
+      character_varying(36) workflowId FK
+      integer executionId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      uuid agentId FK
+      character_varying(16) status
+      json attachments
+    }
+    chat_hub_messages }o--o| chat_hub_messages : FK_1f4998c8a7dec9e00a9ab15550e
+    chat_hub_messages }o--o| chat_hub_messages : FK_25c9736e7f769f3a005eef4b372
+    chat_hub_messages }o--o| execution_entity : FK_6afb260449dd7a9b85355d4e0c9
+    chat_hub_messages }o--o| workflow_entity : FK_acf8926098f063cdbbad8497fd1
+    chat_hub_messages }o--o| chat_hub_agents : FK_chat_hub_messages_agentId
+    chat_hub_messages }o--o| chat_hub_sessions : FK_e22538eb50a71a17954cd7e076c
+    chat_hub_messages }o--o| chat_hub_messages : FK_e5d1fa722c5a8d38ac204746662
+    chat_hub_session_tools {
+      uuid sessionId PK,FK
+      uuid toolId PK,FK
+    }
+    chat_hub_session_tools }o--o| chat_hub_tools : FK_6596a328affd8d4967ffb303eee
+    chat_hub_session_tools }o--o| chat_hub_sessions : FK_e649bf1295f4ed8d4299ed290f9
+    chat_hub_sessions {
+      uuid id PK
+      character_varying(256) title
+      uuid ownerId FK
+      timestamptz(3) lastMessageAt
+      character_varying(36) credentialId FK
+      character_varying(16) provider
+      character_varying(256) model
+      character_varying(36) workflowId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      uuid agentId FK
+      character_varying(128) agentName
+      character_varying(16) type
+    }
+    chat_hub_sessions }o--o| credentials_entity : FK_7bc13b4c7e6afbfaf9be326c189
+    chat_hub_sessions }o--o| workflow_entity : FK_9f9293d9f552496c40e0d1a8f80
+    chat_hub_sessions }o--o| chat_hub_agents : FK_chat_hub_sessions_agentId
+    chat_hub_sessions }o--o| user : FK_e9ecf8ede7d989fcd18790fe36a
+    chat_hub_tools {
+      uuid id PK
+      character_varying(255) name
+      character_varying(255) type
+      double_precision typeVersion
+      uuid ownerId FK
+      json definition
+      boolean enabled
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    chat_hub_tools }o--o| user : FK_b8030b47af9213f1fd15450fb7f
+    credential_dependency {
+      integer id PK
+      character_varying(36) credentialId FK
+      character_varying(64) dependencyType
+      character_varying(255) dependencyId
+      timestamptz(3) createdAt
+    }
+    credential_dependency }o--o| credentials_entity : FK_5ec8e8c8d3539f3696cf73b43bf
+    credentials_entity {
+      character_varying(128) name
+      text data
+      character_varying(128) type
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(36) id PK
+      boolean isManaged
+      boolean isGlobal
+      boolean isResolvable
+      boolean resolvableAllowFallback
+      character_varying(16) resolverId FK
+    }
+    credentials_entity }o--o| dynamic_credential_resolver : credentials_entity_resolverId_foreign
+    data_table {
+      character_varying(36) id PK
+      character_varying(128) name
+      character_varying(36) projectId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    data_table }o--o| project : FK_c2a794257dee48af7c9abf681de
+    data_table_column {
+      character_varying(36) id PK
+      character_varying(128) name
+      character_varying(32) type
+      integer index
+      character_varying(36) dataTableId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    data_table_column }o--o| data_table : FK_930b6e8faaf88294cef23484160
+    data_table_user_SPGOyAFf0KBfcgp4 {
+      integer id PK
+      text requestId
+      text jobId
+      text status
+      text payloadJson
+      text resultJson
+      text updatedAtIso
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    data_table_user_V1zRtKHvsME9BgkO {
+      integer id PK
+      text workerId
+      text status
+      boolean drain
+      double_precision activeJobs
+      double_precision maxConcurrentJobs
+      boolean capacityAvailable
+      text supportedMediaTypes
+      text supportedProfiles
+      boolean comfyReachable
+      boolean artifactStorageEnabled
+      boolean rabbitmqEnabled
+      text rabbitmqQueue
+      text heartbeatJson
+      timestamptz(3) updatedAtIso
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    deployment_key {
+      character_varying(36) id PK
+      character_varying(64) type
+      text value
+      character_varying(20) algorithm
+      character_varying(20) status
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    dynamic_credential_entry {
+      character_varying(16) credential_id PK,FK
+      character_varying(2048) subject_id PK
+      character_varying(16) resolver_id PK,FK
+      text data
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    dynamic_credential_entry }o--o| credentials_entity : FK_a6d1dd080958304a47a02952aab
+    dynamic_credential_entry }o--o| dynamic_credential_resolver : FK_d61a12235d268a49af6a3c09c13
+    dynamic_credential_resolver {
+      character_varying(16) id PK
+      character_varying(128) name
+      character_varying(128) type
+      text config
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    dynamic_credential_user_entry {
+      character_varying(16) credentialId PK,FK
+      uuid userId PK,FK
+      character_varying(16) resolverId PK,FK
+      text data
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    dynamic_credential_user_entry }o--o| dynamic_credential_resolver : FK_6edec973a6450990977bb854c38
+    dynamic_credential_user_entry }o--o| credentials_entity : FK_945ba70b342a066d1306b12ccd2
+    dynamic_credential_user_entry }o--o| user : FK_a36dc616fabc3f736bb82410a22
+    evaluation_collection {
+      character_varying(36) id PK
+      character_varying(128) name
+      text description
+      character_varying(36) workflowId FK
+      character_varying(36) evaluationConfigId FK
+      uuid createdById FK
+      json insightsCache
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    evaluation_collection }o--o| workflow_entity : FK_a48ce930c3bc7604894b8f0eaad
+    evaluation_collection }o--o| evaluation_config : FK_d634a0c93fd7de68a87eab951b2
+    evaluation_collection }o--o| user : FK_f4561f38b5a22a4f090d5cd3eae
+    evaluation_config {
+      character_varying(36) id PK
+      character_varying(36) workflowId FK
+      character_varying(128) name
+      character_varying(16) status
+      character_varying(64) invalidReason
+      character_varying(32) datasetSource
+      json datasetRef
+      character_varying(255) startNodeName
+      character_varying(255) endNodeName
+      json metrics
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    evaluation_config }o--o| workflow_entity : FK_fd7542bb123074760285dc1bbf3
+    event_destinations {
+      uuid id PK
+      jsonb destination
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    execution_annotation_tags {
+      integer annotationId PK,FK
+      character_varying(24) tagId PK,FK
+    }
+    execution_annotation_tags }o--o| annotation_tag_entity : FK_a3697779b366e131b2bbdae2976
+    execution_annotation_tags }o--o| execution_annotations : FK_c1519757391996eb06064f0e7c8
+    execution_annotations {
+      serial id PK
+      integer executionId FK
+      character_varying(6) vote
+      text note
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    execution_annotations |o--o| execution_entity : FK_97f863fa83c4786f19565084960
+    execution_data {
+      integer executionId PK,FK
+      json workflowData
+      text data
+      character_varying(36) workflowVersionId
+    }
+    execution_data |o--o| execution_entity : execution_data_fk
+    execution_entity {
+      serial id PK
+      boolean finished
+      character_varying mode
+      character_varying retryOf
+      character_varying retrySuccessId
+      timestamptz(3) startedAt
+      timestamptz(3) stoppedAt
+      timestamptz(3) waitTill
+      character_varying status
+      character_varying(36) workflowId FK
+      timestamptz(3) deletedAt
+      timestamptz(3) createdAt
+      character_varying(2) storedAt
+      json tracingContext
+      character_varying(255) deduplicationKey
+      bigint jsonSizeBytes
+      character_varying(36) workflowVersionId
+    }
+    execution_entity }o--o| workflow_entity : fk_execution_entity_workflow_id
+    execution_metadata {
+      serial id PK
+      integer executionId FK
+      character_varying(255) key
+      text value
+    }
+    execution_metadata }o--o| execution_entity : FK_31d0b4c93fb85ced26f6005cda3
+    folder {
+      character_varying(36) id PK
+      character_varying(128) name
+      character_varying(36) parentFolderId FK
+      character_varying(36) projectId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    folder }o--o| folder : FK_804ea52f6729e3940498bd54d78
+    folder }o--o| project : FK_a8260b0b36939c6247f385b8221
+    folder_tag {
+      character_varying(36) folderId PK,FK
+      character_varying(36) tagId PK,FK
+    }
+    folder_tag }o--o| folder : FK_94a60854e06f2897b2e0d39edba
+    folder_tag }o--o| tag_entity : FK_dc88164176283de80af47621746
+    insights_by_period {
+      integer id PK
+      integer metaId FK
+      integer type
+      bigint value
+      integer periodUnit
+      timestamptz(0) periodStart
+    }
+    insights_by_period }o--o| insights_metadata : FK_6414cfed98daabbfdd61a1cfbc0
+    insights_metadata {
+      integer metaId PK
+      character_varying(36) workflowId FK
+      character_varying(36) projectId FK
+      character_varying(128) workflowName
+      character_varying(255) projectName
+    }
+    insights_metadata |o--o| workflow_entity : FK_1d8ab99d5861c9388d2dc1cf733
+    insights_metadata }o--o| project : FK_2375a1eda085adb16b24615b69c
+    insights_raw {
+      integer id PK
+      integer metaId FK
+      integer type
+      bigint value
+      timestamptz(0) timestamp
+    }
+    insights_raw }o--o| insights_metadata : FK_6e2e33741adef2a7c5d66befa4e
+    installed_nodes {
+      character_varying(200) name PK
+      character_varying(200) type
+      integer latestVersion
+      character_varying(241) package FK
+    }
+    installed_nodes }o--o| installed_packages : FK_73f857fc5dce682cef8a99c11dbddbc969618951
+    installed_packages {
+      character_varying(214) packageName PK
+      character_varying(50) installedVersion
+      character_varying(70) authorName
+      character_varying(70) authorEmail
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_checkpoints {
+      character_varying(255) key PK
+      character_varying(255) runId
+      uuid threadId FK
+      character_varying(255) resourceId
+      json state
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      timestamptz(3) expiredAt
+    }
+    instance_ai_checkpoints }o--o| instance_ai_threads : FK_2b23f3f24a70bebb990203b011e
+    instance_ai_iteration_logs {
+      character_varying(36) id PK
+      uuid threadId FK
+      character_varying taskKey
+      text entry
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_iteration_logs }o--o| instance_ai_threads : FK_8bfcc6c51fd3d69b1eae8aebd49
+    instance_ai_mcp_registry_connections {
+      uuid id PK
+      character_varying(36) credentialId FK
+      character_varying(255) serverSlug FK
+      json toolFilter
+      uuid userId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_mcp_registry_connections }o--o| mcp_registry_server : FK_1d25707354d2012da256eb2ec0a
+    instance_ai_mcp_registry_connections }o--o| credentials_entity : FK_1e826120e7e53ebc4681f026de8
+    instance_ai_mcp_registry_connections }o--o| user : FK_8b42c08a531d76410980c639a5b
+    instance_ai_messages {
+      character_varying(36) id PK
+      uuid threadId FK
+      text content
+      character_varying(16) role
+      character_varying(32) type
+      character_varying(255) resourceId
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_messages }o--o| instance_ai_threads : FK_1eeb64cb9d66a927988de759e6e
+    instance_ai_observation_cursors {
+      uuid observationScopeId PK,FK
+      character_varying(36) lastObservedMessageId
+      timestamptz(3) lastObservedAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_observation_cursors |o--o| instance_ai_threads : FK_5b6319b2e9a37c1064a72428f9a
+    instance_ai_observation_locks {
+      uuid observationScopeId PK,FK
+      character_varying(20) taskKind PK
+      character_varying(64) holderId
+      timestamptz(3) heldUntil
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_observation_locks }o--o| instance_ai_threads : FK_103e2e5f454860b28ea05a82c74
+    instance_ai_observational_memory {
+      character_varying(36) id PK
+      character_varying(255) lookupKey
+      character_varying(16) scope
+      uuid threadId FK
+      character_varying(255) resourceId
+      text activeObservations
+      character_varying(32) originType
+      text config
+      integer generationCount
+      timestamptz(3) lastObservedAt
+      integer pendingMessageTokens
+      integer totalTokensObserved
+      integer observationTokenCount
+      boolean isObserving
+      boolean isReflecting
+      json observedMessageIds
+      character_varying observedTimezone
+      text bufferedObservations
+      integer bufferedObservationTokens
+      json bufferedMessageIds
+      text bufferedReflection
+      integer bufferedReflectionTokens
+      integer bufferedReflectionInputTokens
+      integer reflectedObservationLineCount
+      json bufferedObservationChunks
+      boolean isBufferingObservation
+      boolean isBufferingReflection
+      integer lastBufferedAtTokens
+      timestamptz(3) lastBufferedAtTime
+      json metadata
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_observational_memory }o--o| instance_ai_threads : FK_34018c303885cd37093458e6409
+    instance_ai_observations {
+      character_varying(36) id PK
+      uuid observationScopeId FK
+      character_varying(16) marker
+      text text
+      character_varying(36) parentId FK
+      integer tokenCount
+      character_varying(16) status
+      character_varying(36) supersededBy FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_observations }o--o| instance_ai_observations : FK_a80e0ee839a2f10ba4b86e19998
+    instance_ai_observations }o--o| instance_ai_threads : FK_d54fc84a6c8ac91b5e0db0378a4
+    instance_ai_observations }o--o| instance_ai_observations : FK_daef2195a4a846eb70eed15e039
+    instance_ai_pending_confirmations {
+      character_varying(36) requestId PK
+      uuid threadId FK
+      uuid userId FK
+      character_varying(16) kind
+      character_varying(36) runId
+      character_varying(64) toolCallId
+      character_varying(36) messageGroupId
+      character_varying(255) checkpointKey FK
+      character_varying(36) checkpointTaskId
+      timestamptz(3) expiresAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_pending_confirmations }o--o| instance_ai_checkpoints : FK_0babdf6e3b897a86fe4678355eb
+    instance_ai_pending_confirmations }o--o| instance_ai_threads : FK_ba67ee8dc311830a2eea89b6e96
+    instance_ai_pending_confirmations }o--o| user : FK_df5fd25c8bbfd2b042602600d8e
+    instance_ai_resources {
+      character_varying(255) id PK
+      text workingMemory
+      json metadata
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_ai_run_snapshots {
+      uuid threadId PK,FK
+      character_varying(36) runId PK
+      character_varying(36) messageGroupId
+      json runIds
+      text tree
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(36) langsmithRunId
+      character_varying(36) langsmithTraceId
+      character_varying(64) traceId
+      character_varying(64) spanId
+    }
+    instance_ai_run_snapshots }o--o| instance_ai_threads : FK_2f63fa21d09d7918f347ddbdf70
+    instance_ai_threads {
+      uuid id PK
+      character_varying(255) resourceId
+      text title
+      json metadata
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(36) projectId FK
+    }
+    instance_ai_threads }o--o| project : FK_instance_ai_threads_projectId
+    instance_ai_workflow_snapshots {
+      character_varying(36) runId PK
+      character_varying(255) workflowName PK
+      character_varying(255) resourceId
+      character_varying status
+      text snapshot
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    instance_version_history {
+      serial id PK
+      integer major
+      integer minor
+      integer patch
+      timestamptz(3) createdAt
+    }
+    invalid_auth_token {
+      character_varying(512) token PK
+      timestamptz(3) expiresAt
+    }
+    mcp_registry_server {
+      character_varying(255) slug PK
+      character_varying(50) status
+      character_varying(50) version
+      timestamp(3) registryUpdatedAt
+      json data
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    migrations {
+      serial id PK
+      bigint timestamp
+      character_varying name
+    }
+    oauth_access_tokens {
+      character_varying token PK
+      character_varying clientId FK
+      uuid userId FK
+    }
+    oauth_access_tokens }o--o| user : FK_7234a36d8e49a1fa85095328845
+    oauth_access_tokens }o--o| oauth_clients : FK_78b26968132b7e5e45b75876481
+    oauth_authorization_codes {
+      character_varying(255) code PK
+      character_varying clientId FK
+      uuid userId FK
+      character_varying redirectUri
+      character_varying codeChallenge
+      character_varying(255) codeChallengeMethod
+      bigint expiresAt
+      character_varying state
+      boolean used
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying resource
+      json scope
+    }
+    oauth_authorization_codes }o--o| oauth_clients : FK_64d965bd072ea24fb6da55468cd
+    oauth_authorization_codes }o--o| user : FK_aa8d3560484944c19bdf79ffa16
+    oauth_clients {
+      character_varying id PK
+      character_varying(255) name
+      json redirectUris
+      json grantTypes
+      character_varying(255) clientSecret
+      bigint clientSecretExpiresAt
+      character_varying(255) tokenEndpointAuthMethod
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    oauth_refresh_tokens {
+      character_varying(255) token PK
+      character_varying clientId FK
+      uuid userId FK
+      bigint expiresAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json scope
+    }
+    oauth_refresh_tokens }o--o| user : FK_a699f3ed9fd0c1b19bc2608ac53
+    oauth_refresh_tokens }o--o| oauth_clients : FK_b388696ce4d8be7ffbe8d3e4b69
+    oauth_user_consents {
+      integer id PK
+      uuid userId FK
+      character_varying clientId FK
+      bigint grantedAt
+    }
+    oauth_user_consents }o--o| user : FK_21e6c3c2d78a097478fae6aaefa
+    oauth_user_consents }o--o| oauth_clients : FK_a651acea2f6c97f8c4514935486
+    processed_data {
+      character_varying(36) workflowId PK,FK
+      character_varying(255) context PK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      text value
+    }
+    processed_data }o--o| workflow_entity : FK_06a69a7032c97a763c2c7599464
+    project {
+      character_varying(36) id PK
+      character_varying(255) name
+      character_varying(36) type
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json icon
+      character_varying(512) description
+      uuid creatorId FK
+      json customTelemetryTags
+    }
+    project }o--o| user : projects_creatorId_foreign
+    project_relation {
+      character_varying(36) projectId PK,FK
+      uuid userId PK,FK
+      character_varying role FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    project_relation }o--o| user : FK_5f0643f6717905a05164090dde7
+    project_relation }o--o| project : FK_61448d56d61802b5dfde5cdb002
+    project_relation }o--o| role : FK_c6b99592dc96b0d836d7a21db91
+    project_secrets_provider_access {
+      integer secretsProviderConnectionId PK,FK
+      character_varying(36) projectId PK,FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(128) role
+    }
+    project_secrets_provider_access }o--o| secrets_provider_connection : FK_18e5c27d2524b1638b292904e48
+    project_secrets_provider_access }o--o| project : FK_bd264b81209355b543878deedb1
+    role {
+      character_varying(128) slug PK
+      text displayName
+      text description
+      text roleType
+      boolean systemRole
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    role_mapping_rule {
+      character_varying(16) id PK
+      text expression
+      character_varying(128) role FK
+      character_varying(64) type
+      integer order
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    role_mapping_rule }o--o| role : FK_bb66e404c35996b0d6946177501
+    role_mapping_rule_project {
+      character_varying(16) roleMappingRuleId PK,FK
+      character_varying(36) projectId PK,FK
+    }
+    role_mapping_rule_project }o--o| project : FK_35a78869286c65d9330d02b88f5
+    role_mapping_rule_project }o--o| role_mapping_rule : FK_dd7ce4dfa09e95b36a626bd9de3
+    role_scope {
+      character_varying(128) roleSlug PK,FK
+      character_varying(128) scopeSlug PK,FK
+    }
+    role_scope }o--o| role : FK_role
+    role_scope }o--o| scope : FK_scope
+    scope {
+      character_varying(128) slug PK
+      text displayName
+      text description
+    }
+    secrets_provider_connection {
+      integer id PK
+      character_varying(128) providerKey
+      character_varying(36) type
+      text encryptedSettings
+      boolean isEnabled
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    settings {
+      character_varying(255) key PK
+      text value
+      boolean loadOnStartup
+    }
+    shared_credentials {
+      character_varying(36) credentialsId PK,FK
+      character_varying(36) projectId PK,FK
+      text role
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    shared_credentials }o--o| credentials_entity : FK_416f66fc846c7c442970c094ccf
+    shared_credentials }o--o| project : FK_812c2852270da1247756e77f5a4
+    shared_workflow {
+      character_varying(36) workflowId PK,FK
+      character_varying(36) projectId PK,FK
+      text role
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    shared_workflow }o--o| project : FK_a45ea5f27bcfdc21af9b4188560
+    shared_workflow }o--o| workflow_entity : FK_daa206a04983d47d0a9c34649ce
+    tag_entity {
+      character_varying(24) name
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(36) id PK
+    }
+    test_case_execution {
+      character_varying(36) id PK
+      character_varying(36) testRunId FK
+      integer executionId FK
+      character_varying status
+      timestamptz(3) runAt
+      timestamptz(3) completedAt
+      character_varying errorCode
+      json errorDetails
+      json metrics
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json inputs
+      json outputs
+      integer runIndex
+    }
+    test_case_execution }o--o| test_run : FK_8e4b4774db42f1e6dda3452b2af
+    test_case_execution }o--o| execution_entity : FK_e48965fac35d0f5b9e7f51d8c44
+    test_run {
+      character_varying(36) id PK
+      character_varying(36) workflowId FK
+      character_varying status
+      character_varying errorCode
+      json errorDetails
+      timestamptz(3) runAt
+      timestamptz(3) completedAt
+      json metrics
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(255) runningInstanceId
+      boolean cancelRequested
+      character_varying(36) workflowVersionId
+      character_varying(36) evaluationConfigId FK
+      jsonb evaluationConfigSnapshot
+      character_varying(36) collectionId FK
+    }
+    test_run }o--o| workflow_entity : FK_d6870d3b6e4c185d33926f423c8
+    test_run }o--o| evaluation_collection : FK_test_run_collection_id
+    test_run }o--o| evaluation_config : FK_test_run_evaluation_config_id
+    token_exchange_jti {
+      character_varying(255) jti PK
+      timestamptz(3) expiresAt
+      timestamptz(3) createdAt
+    }
+    trusted_key {
+      character_varying(36) sourceId PK,FK
+      character_varying(255) kid PK
+      text data
+      timestamptz(3) createdAt
+    }
+    trusted_key }o--o| trusted_key_source : FK_8c2938d746943dd8f608d23c891
+    trusted_key_source {
+      character_varying(36) id PK
+      character_varying(32) type
+      text config
+      character_varying(32) status
+      text lastError
+      timestamptz(3) lastRefreshedAt
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    user {
+      uuid id PK
+      character_varying(255) email
+      character_varying(32) firstName
+      character_varying(32) lastName
+      character_varying(255) password
+      json personalizationAnswers
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json settings
+      boolean disabled
+      boolean mfaEnabled
+      text mfaSecret
+      text mfaRecoveryCodes
+      date lastActiveAt
+      character_varying(128) roleSlug FK
+    }
+    user }o--o| role : FK_eaea92ee7bfb9c1b6cd01505d56
+    user_api_keys {
+      character_varying(36) id PK
+      uuid userId FK
+      character_varying(100) label
+      character_varying apiKey
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json scopes
+      character_varying audience
+      timestamptz(3) lastUsedAt
+    }
+    user_api_keys }o--o| user : FK_e131705cbbc8fb589889b02d457
+    user_favorites {
+      integer id PK
+      uuid userId FK
+      character_varying(255) resourceId
+      character_varying(64) resourceType
+    }
+    user_favorites }o--o| user : FK_1dd5c393ad0517be3c31a7af836
+    variables {
+      character_varying(50) key
+      character_varying(50) type
+      text value
+      character_varying(36) id PK
+      character_varying(36) projectId FK
+    }
+    variables }o--o| project : FK_42f6c766f9f9d2edcc15bdd6e9b
+    webhook_entity {
+      character_varying webhookPath PK
+      character_varying method PK
+      character_varying node
+      character_varying webhookId
+      integer pathLength
+      character_varying(36) workflowId FK
+    }
+    webhook_entity }o--o| workflow_entity : fk_webhook_entity_workflow_id
+    workflow_builder_session {
+      uuid id PK
+      character_varying(36) workflowId FK
+      uuid userId FK
+      json messages
+      text previousSummary
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      character_varying(255) activeVersionCardId
+      character_varying(255) resumeAfterRestoreMessageId
+    }
+    workflow_builder_session }o--o| user : FK_00290cdeee4d4d7db84709be936
+    workflow_builder_session }o--o| workflow_entity : FK_7983c618db48f47bf5a4cc1e1e4
+    workflow_dependency {
+      integer id PK
+      character_varying(36) workflowId FK
+      integer workflowVersionId
+      character_varying(32) dependencyType
+      character_varying(255) dependencyKey
+      json dependencyInfo
+      smallint indexVersionId
+      timestamptz(3) createdAt
+      character_varying(36) publishedVersionId
+    }
+    workflow_dependency }o--o| workflow_entity : FK_a4ff2d9b9628ea988fa9e7d0bf8
+    workflow_entity {
+      character_varying(128) name
+      boolean active
+      json nodes
+      json connections
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json settings
+      json staticData
+      json pinData
+      character(36) versionId
+      integer triggerCount
+      character_varying(36) id PK
+      json meta
+      character_varying(36) parentFolderId FK
+      boolean isArchived
+      integer versionCounter
+      text description
+      character_varying(36) activeVersionId FK
+      json nodeGroups
+      character_varying sourceWorkflowId
+    }
+    workflow_entity }o--o| workflow_history : FK_08d6c67b7f722b0039d9d5ed620
+    workflow_entity }o--o| folder : fk_workflow_parent_folder
+    workflow_history {
+      character_varying(36) versionId PK
+      character_varying(36) workflowId FK
+      character_varying(255) authors
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+      json nodes
+      json connections
+      character_varying(128) name
+      boolean autosaved
+      text description
+      json nodeGroups
+    }
+    workflow_history }o--o| workflow_entity : FK_1e31657f5fe46816c34be7c1b4b
+    workflow_publication_outbox {
+      integer id PK
+      character_varying(36) workflowId
+      character_varying(36) publishedVersionId
+      character_varying(20) status
+      text errorMessage
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    workflow_publish_history {
+      integer id PK
+      character_varying(36) workflowId FK
+      character_varying(36) versionId FK
+      character_varying(36) event
+      uuid userId FK
+      timestamptz(3) createdAt
+    }
+    workflow_publish_history }o--o| user : FK_6eab5bd9eedabe9c54bd879fc40
+    workflow_publish_history }o--o| workflow_history : FK_b4cfbc7556d07f36ca177f5e473
+    workflow_publish_history }o--o| workflow_entity : FK_c01316f8c2d7101ec4fa9809267
+    workflow_published_version {
+      character_varying(36) workflowId PK,FK
+      character_varying(36) publishedVersionId FK
+      timestamptz(3) createdAt
+      timestamptz(3) updatedAt
+    }
+    workflow_published_version |o--o| workflow_entity : FK_5c76fb7ee939fe2530374d3f75a
+    workflow_published_version }o--o| workflow_history : FK_df3428a541b802d6a63ac56e330
+    workflow_statistics {
+      bigint count
+      timestamptz(3) latestEvent
+      character_varying(128) name
+      character_varying(36) workflowId
+      bigint rootCount
+      serial id PK
+      character_varying(128) workflowName
+    }
+    workflows_tags {
+      character_varying(36) workflowId PK,FK
+      character_varying(36) tagId PK,FK
+    }
+    workflows_tags }o--o| tag_entity : fk_workflows_tags_tag_id
+    workflows_tags }o--o| workflow_entity : fk_workflows_tags_workflow_id
