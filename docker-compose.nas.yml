@@ -47,6 +47,18 @@ services:
     volumes:
       - ${NAS_ROOT:?set NAS_ROOT in .env}/postgres:/var/lib/postgresql/data
 
+  postgres-public-5433:
+    image: ${POSTGRES_PUBLIC_FORWARD_IMAGE:-alpine/socat:latest}
+    container_name: postgres-public-5433
+    networks: ['demo']
+    restart: unless-stopped
+    command: -dd TCP-LISTEN:5433,fork,reuseaddr TCP:postgres:5432
+    ports:
+      - 5433:5433
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   minio:
     ports: !override
       - 9000:9000
