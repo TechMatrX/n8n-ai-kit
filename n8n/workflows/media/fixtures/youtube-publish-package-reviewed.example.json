@@ -43,6 +43,7 @@
       "source": "media-worker-callback",
       "approvalRequired": true,
       "approvalMode": "manual-token",
+      "thumbnailPolicy": "manual_until_channel_custom_thumbnail_permission_enabled",
       "reviewedBy": "Andy",
       "reviewedAt": "YYYY-MM-DDTHH:mm:ss+07:00"
     }

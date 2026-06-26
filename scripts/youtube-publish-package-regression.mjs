@@ -25,6 +25,10 @@ assert.equal(preflight.uploadPlan.description.includes("Source artifact package"
 assert.equal(preflight.rollbackPlan.keepSourceArtifact, fixture.artifactPageUrl);
 assert.equal(preflight.uploadPlan.finalVideoRole, null);
 assert.equal(preflight.uploadPlan.thumbnailRole, null);
+assert.equal(
+  fixture.metadata.publishing.thumbnailPolicy,
+  "manual_until_channel_custom_thumbnail_permission_enabled",
+);
 
 const approved = validateYouTubePublishPackage(fixture, {
   approve: true,

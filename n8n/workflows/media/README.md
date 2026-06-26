@@ -64,7 +64,9 @@ Publishing hardening currently staged:
 - the ledger-write node is placed after upload and thumbnail update, but remains
   disabled so preflight tests cannot mark a video as published
 - thumbnail handling is staged as `Download Thumbnail (disabled)` followed by
-  `Set YouTube Thumbnail (disabled)` against YouTube's thumbnail upload endpoint
+  `Set YouTube Thumbnail (disabled)` against YouTube's thumbnail upload
+  endpoint; thumbnail upload is optional until the channel has custom-thumbnail
+  permission
 - response payload includes `gateBlocks`, `thumbnailPlan`, and `rollbackPlan`
 - dry-run execution `7272` returned `preflight_only` with no external upload
 - live preflight execution `14929` used a real `music_video_loop` package and
@@ -72,9 +74,8 @@ Publishing hardening currently staged:
   `thumbnailRole=cover`, `artifactCount=5`, and only three nodes executed:
   webhook, validator, and response
 
-Real publishing still requires enabling the upload/thumbnail/ledger branch,
-confirming the `YOUTUBE_PUBLISH_APPROVAL_TOKEN` positive path, and running the
-first reviewed package as a private YouTube upload.
+Real publishing now belongs to the separate guarded private workflow below.
+This workflow stays preflight-only.
 
 ## AGE17 Dev - YouTube Private Publish v1
 
@@ -109,14 +110,30 @@ Validation status:
 - duplicate guard proof execution `15036` returned HTTP `409` /
   `duplicate_blocked` and ran only the four gate nodes; no download, upload,
   thumbnail, or ledger branch executed
+- fresh package `music-video-youtube-fit-20260619112642` uploaded successfully
+  as private YouTube video `3a3Qvuzj-rY`; ledger recorded immediately after
+  upload; duplicate proof execution `15131` returned HTTP `409` /
+  `duplicate_blocked` and ran only the four gate nodes
+
+Thumbnail policy:
+
+- custom thumbnail upload currently fails with YouTube `403` because the
+  authenticated channel does not have custom-thumbnail permission
+- the workflow treats thumbnail upload as non-fatal and records the publish
+  ledger before attempting thumbnail upload
+- generated review packages should declare
+  `metadata.publishing.thumbnailPolicy=manual_until_channel_custom_thumbnail_permission_enabled`
+- until the channel permission is enabled, thumbnails are a manual/post-upload
+  YouTube Studio step
 
 Follow-up before another private publish:
 
 - keep the workflow inactive until the next controlled test
 - make a fresh reviewed package for the next publish test, or intentionally
   clear the duplicate guard only after confirming rollback/deletion
-- enable YouTube custom-thumbnail permission for the channel when ready; until
-  then thumbnail upload is optional/non-fatal
+- enable YouTube custom-thumbnail permission for the channel when ready, then
+  run a dedicated thumbnail-only proof before treating automated thumbnail
+  setting as supported
 
 Reviewed package fixture:
 
