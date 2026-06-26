@@ -76,6 +76,30 @@ Real publishing still requires enabling the upload/thumbnail/ledger branch,
 confirming the `YOUTUBE_PUBLISH_APPROVAL_TOKEN` positive path, and running the
 first reviewed package as a private YouTube upload.
 
+## AGE17 Dev - YouTube Private Publish v1
+
+Live workflow ID: `442Fx3mlY2h8nuAU`
+
+This workflow is staged as the separate private-upload path, but remains
+inactive. It must only be activated for a deliberate approval test against a
+reviewed package.
+
+Safety gates:
+
+- workflow inactive by default
+- validates the same artifact package shape as the preflight endpoint
+- requires `confirm=publish-to-youtube`
+- requires `YOUTUBE_PUBLISH_APPROVAL_TOKEN`
+- requires `privacyStatus=private`
+- blocks duplicate publish keys
+- writes the publish ledger only after upload and thumbnail handling complete
+
+Validation status:
+
+- n8n validation: 0 errors, 9 expected warnings from dynamic URLs, error
+  handling suggestions, and the guarded IF branch
+- inactive trigger test correctly refused execution
+
 Reviewed package fixture:
 
 ```text
