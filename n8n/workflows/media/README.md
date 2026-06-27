@@ -41,6 +41,43 @@ Workflows covered by this policy:
 | AGE17 Dev - Music Generate acestep_turbo Submit v2 | `ma2PY9x1YIcNlEBm` | success `all`, error `all` |
 | AGE17 Dev - Music Generate acestep_turbo | `CCc3iuVmmLBfCdNu` | success `all`, error `all` |
 
+## AGE17 Dev - Schema Review Submit v1
+
+Live workflow ID: `ZpEjbMuAfCZ6WeCt`
+
+Schema review is a read-only Atlas inspection/review path. Telegram and
+OpenClaw plugin requests must pass target aliases only; database credentials
+must never be sent from Telegram or persisted in chat text.
+
+Supported target matrix:
+
+| Target alias | Dialect | Status | Notes |
+| --- | --- | --- | --- |
+| `nas-n8n-postgres` | `postgres` | supported | Read-only Atlas inspect of the NAS n8n Postgres database. |
+| MySQL aliases | `mysql` | planned | Add only after worker-side target registry and credential mapping are configured. |
+| MariaDB aliases | `mariadb` | planned | Add only after worker-side target registry and credential mapping are configured. |
+
+Operator command:
+
+```text
+/media schema_review target=nas-n8n-postgres dialect=postgres title="n8n schema review"
+```
+
+The `/media` router rejects unsupported target aliases before submitting to n8n.
+The worker remains responsible for resolving approved aliases to credentials and
+for enforcing `applyMigrations=false`.
+
+Expected artifacts:
+
+- Markdown report
+- Atlas HCL
+- redacted SQL descriptor
+- JSON schema
+- stats TXT
+- Mermaid ERD source
+- SVG ERD
+- PNG ERD
+
 ## AGE17 Dev - Music Generate acestep_turbo Submit v2
 
 Live workflow ID: `ma2PY9x1YIcNlEBm`
