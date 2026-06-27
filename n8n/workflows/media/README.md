@@ -1,5 +1,46 @@
 # Media Workflow Notes
 
+## Media Submit Execution Retention Policy
+
+Policy date: 2026-06-27.
+
+During the `/media` rollout stabilization window, the active media submit
+workflows intentionally save both successful and failed executions:
+
+```text
+saveDataSuccessExecution: all
+saveDataErrorExecution: all
+```
+
+This keeps n8n execution history useful while validating real Telegram
+commands, plugin routing, RabbitMQ dispatch, worker rendering, and artifact
+callbacks. The n8n execution log is a debugging surface only; the canonical job
+audit trail remains `MediaPhase1Jobs`, the media-worker database, artifact
+events, and worker/plugin logs.
+
+Rollout window:
+
+- Start: 2026-06-27 12:30 ICT.
+- Review after: 7 days, on or after 2026-07-04.
+- Keep failed execution history enabled: `saveDataErrorExecution=all`.
+- After the review window, either prune old successful executions or set
+  `saveDataSuccessExecution=none` for high-volume submit workflows if n8n DB
+  growth becomes material.
+- Low-volume/debug workflows may keep successful execution history enabled when
+  it remains useful for operator visibility.
+
+Workflows covered by this policy:
+
+| Workflow | ID | Current policy |
+| --- | --- | --- |
+| AGE17 Dev - Schema Review Submit v1 | `ZpEjbMuAfCZ6WeCt` | success `all`, error `all` |
+| AGE17 Dev - Architecture Diagram Submit v1 | `f16UIL4cILvPoAef` | success `all`, error `all` |
+| AGE17 Dev - Mermaid Preview Submit v1 | `XyKli7nWYa2JLjPJ` | success `all`, error `all` |
+| AGE17 Dev - Markdown Presentation Submit v1 | `Y5aNKgs7P0bJrEJY` | success `all`, error `all` |
+| AGE17 Dev - Markdown Mindmap Submit v1 | `R1X0civ6trpBVQbV` | success `all`, error `all` |
+| AGE17 Dev - Music Generate acestep_turbo Submit v2 | `ma2PY9x1YIcNlEBm` | success `all`, error `all` |
+| AGE17 Dev - Music Generate acestep_turbo | `CCc3iuVmmLBfCdNu` | success `all`, error `all` |
+
 ## AGE17 Dev - Music Generate acestep_turbo Submit v2
 
 Live workflow ID: `ma2PY9x1YIcNlEBm`
