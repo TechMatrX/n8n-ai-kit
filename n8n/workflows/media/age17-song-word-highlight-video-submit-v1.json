@@ -1,0 +1,802 @@
+{
+  "_openclawExport": {
+    "exportedAt": "2026-06-14T04:08:16.074Z",
+    "source": "n8n_get_workflow + local structured patch",
+    "purpose": "Version live Submit v2 registry-driven worker readiness gate",
+    "workflowId": "ma2PY9x1YIcNlEBm",
+    "workflowName": "AGE17 Dev - Music Generate acestep_turbo Submit v2",
+    "activeAtExport": true,
+    "versionId": "486682cb-69d7-46bf-bf38-fc6ae991f0ac",
+    "activeVersionId": "bfb88be7-7584-44be-a8db-d3c18a623631",
+    "versionCounter": 8
+  },
+  "name": "AGE17 Dev - Song Word-Highlight Video Submit v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dev/media/song-word-highlight-video-submit-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "whmv-1",
+      "name": "Song Video Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        304
+      ],
+      "webhookId": "dev-media-music-generate-submit-v2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first().json.body ?? $input.first().json;\nfunction text(value) { return typeof value === 'string' ? value.trim() : ''; }\nfunction slug(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 96); }\nfunction clampNumber(value, fallback, min, max) {\n  const n = Number(value ?? fallback);\n  return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : fallback;\n}\nfunction audioAssetFrom(input) {\n  const sourceAsset = input.audioAsset && typeof input.audioAsset === 'object' && !Array.isArray(input.audioAsset) ? input.audioAsset : {};\n  const outputPath = text(sourceAsset.outputPath || input.audioOutputPath || input.audioPath);\n  const url = text(sourceAsset.url || sourceAsset.downloadUrl || input.audioUrl);\n  const filename = text(sourceAsset.filename || (outputPath ? outputPath.split('/').pop() : '') || input.audioFilename || 'source-audio.mp3');\n  return { ...sourceAsset, role: 'primary', outputPath, url: url || null, filename, mediaType: 'audio', mimeType: sourceAsset.mimeType || 'audio/mpeg' };\n}\nconst requestedProfile = text(source.profile) || 'youtube_music_video';\nconst requestId = text(source.requestId) || slug([source.title, source.name, Date.now()].filter(Boolean).join('-'));\nconst title = text(source.title || source.songTitle || source.name) || requestId;\nconst lyrics = text(source.lyrics);\nconst tags = text(source.tags || source.prompt) || 'warm birthday song, cinematic family celebration, gentle emotional pop, clean radio mix';\nconst visualPrompt = text(source.visualPrompt || source.imagePrompt || source.videoPrompt) || 'cinematic candlelight birthday scene, glowing candles, warm golden bokeh, gentle movement, premium family celebration mood, object-only still-life, no text, no people, no hands, smooth loop';\nconst durationSeconds = clampNumber(source.durationSeconds ?? source.duration, 120, 15, 120);\nconst traceId = text(source?.metadata?.traceId);\nconst audioAsset = audioAssetFrom(source);\nconst errors = [];\nif (!requestId) errors.push('requestId is required or must be derivable from title/name');\nif (!lyrics) errors.push('lyrics is required for word-highlight timing');\nif (!audioAsset.outputPath) errors.push('audioAsset.outputPath or audioOutputPath is required for v1');\nif (!['youtube_music_video', 'music_video_loop'].includes(requestedProfile)) errors.push('profile must be youtube_music_video or music_video_loop');\nif (errors.length) {\n  return [{ json: { requestId: requestId || null, status: 'failed', stage: 'validation', errorCode: 'INVALID_WORD_HIGHLIGHT_VIDEO_REQUEST', message: errors.join('; '), responseCode: 400, route: 'error', metadata: { traceId } } }];\n}\nconst coverWorkflow = {\"33\":{\"inputs\":{\"filename_prefix\":\"z-image-turbo-youtube\",\"images\":[\"34:25\",0]},\"class_type\":\"SaveImage\",\"_meta\":{\"title\":\"Save Image\"}},\"34:24\":{\"inputs\":{\"vae_name\":\"ae.safetensors\"},\"class_type\":\"VAELoader\",\"_meta\":{\"title\":\"Load VAE\"}},\"34:25\":{\"inputs\":{\"samples\":[\"34:26\",0],\"vae\":[\"34:24\",0]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\"34:26\":{\"inputs\":{\"seed\":0,\"steps\":6,\"cfg\":1.2,\"sampler_name\":\"dpmpp_2m\",\"scheduler\":\"simple\",\"denoise\":1,\"model\":[\"34:31\",0],\"positive\":[\"34:27\",0],\"negative\":[\"34:32\",0],\"latent_image\":[\"34:29\",0]},\"class_type\":\"KSampler\",\"_meta\":{\"title\":\"KSampler\"}},\"34:27\":{\"inputs\":{\"text\":\"cute robot mascot, anime style, holding sign \\\"Hello World\\\", bright colors, cheerful expression, clean background\",\"clip\":[\"34:30\",0]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Positive Prompt)\"}},\"34:28\":{\"inputs\":{\"unet_name\":\"z_image_turbo-Q5_K_M.gguf\"},\"class_type\":\"UnetLoaderGGUF\",\"_meta\":{\"title\":\"Unet Loader (GGUF)\"}},\"34:29\":{\"inputs\":{\"width\":1024,\"height\":576,\"batch_size\":1},\"class_type\":\"EmptySD3LatentImage\",\"_meta\":{\"title\":\"EmptySD3LatentImage\"}},\"34:30\":{\"inputs\":{\"clip_name\":\"Qwen3-4b-Z-Image-Engineer-V4-Q5_K_M.gguf\",\"type\":\"lumina2\"},\"class_type\":\"CLIPLoaderGGUF\",\"_meta\":{\"title\":\"CLIPLoader (GGUF)\"}},\"34:31\":{\"inputs\":{\"shift\":5,\"model\":[\"34:28\",0]},\"class_type\":\"ModelSamplingAuraFlow\",\"_meta\":{\"title\":\"ModelSamplingAuraFlow\"}},\"34:32\":{\"inputs\":{\"conditioning\":[\"34:27\",0]},\"class_type\":\"ConditioningZeroOut\",\"_meta\":{\"title\":\"ConditioningZeroOut\"}}};\nconst videoWorkflow = {\"6\":{\"inputs\":{\"text\":\"subtle cinematic animated music cover, gentle camera movement, glowing notation lines, soft particles, smooth loop, no text, no watermark\",\"clip\":[\"38\",0]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Positive Prompt)\"}},\"7\":{\"inputs\":{\"text\":\"static, blurry, distorted, deformed, low quality, artifacts, glitchy, frozen frame, text, watermark\",\"clip\":[\"38\",0]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Negative Prompt)\"}},\"8\":{\"inputs\":{\"samples\":[\"72\",0],\"vae\":[\"44\",2]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\"38\":{\"inputs\":{\"clip_name\":\"t5xxl_fp16.safetensors\",\"type\":\"ltxv\",\"device\":\"default\"},\"class_type\":\"CLIPLoader\",\"_meta\":{\"title\":\"Load CLIP\"}},\"44\":{\"inputs\":{\"ckpt_name\":\"ltx-video-2b-v0.9.5.safetensors\"},\"class_type\":\"CheckpointLoaderSimple\",\"_meta\":{\"title\":\"Load Checkpoint\"}},\"69\":{\"inputs\":{\"frame_rate\":25,\"positive\":[\"77\",0],\"negative\":[\"77\",1]},\"class_type\":\"LTXVConditioning\",\"_meta\":{\"title\":\"LTXVConditioning\"}},\"71\":{\"inputs\":{\"steps\":30,\"max_shift\":2.05,\"base_shift\":0.95,\"stretch\":true,\"terminal\":0.1,\"latent\":[\"77\",2]},\"class_type\":\"LTXVScheduler\",\"_meta\":{\"title\":\"LTXVScheduler\"}},\"72\":{\"inputs\":{\"add_noise\":true,\"noise_seed\":889147486987850,\"cfg\":3,\"model\":[\"44\",0],\"positive\":[\"69\",0],\"negative\":[\"69\",1],\"sampler\":[\"73\",0],\"sigmas\":[\"71\",0],\"latent_image\":[\"77\",2]},\"class_type\":\"SamplerCustom\",\"_meta\":{\"title\":\"SamplerCustom\"}},\"73\":{\"inputs\":{\"sampler_name\":\"euler\"},\"class_type\":\"KSamplerSelect\",\"_meta\":{\"title\":\"KSamplerSelect\"}},\"77\":{\"inputs\":{\"width\":768,\"height\":512,\"length\":97,\"batch_size\":1,\"strength\":0.15,\"positive\":[\"6\",0],\"negative\":[\"7\",0],\"vae\":[\"44\",2],\"image\":[\"78\",0]},\"class_type\":\"LTXVImgToVideo\",\"_meta\":{\"title\":\"LTXVImgToVideo\"}},\"78\":{\"inputs\":{\"image\":\"music-cover_00011_.png\"},\"class_type\":\"LoadImage\",\"_meta\":{\"title\":\"Load Image\"}},\"80\":{\"inputs\":{\"fps\":24,\"bit_depth\":8,\"images\":[\"8\",0]},\"class_type\":\"CreateVideo\",\"_meta\":{\"title\":\"Create Video\"}},\"81\":{\"inputs\":{\"filename_prefix\":\"video/ComfyUI\",\"format\":\"auto\",\"codec\":\"auto\",\"video\":[\"80\",0]},\"class_type\":\"SaveVideo\",\"_meta\":{\"title\":\"Save Video\"}}};\ncoverWorkflow['34:27'].inputs.text = visualPrompt;\nvideoWorkflow['6'].inputs.text = visualPrompt + ', subtle cinematic animated music-video background, gentle camera push, soft particles, smooth motion';\nconst youtube = source.youtube && typeof source.youtube === 'object' ? source.youtube : {};\nconst delivery = source.delivery && typeof source.delivery === 'object' ? source.delivery : {};\nreturn [{ json: {\n  requestId,\n  profile: requestedProfile,\n  count: 1,\n  tags,\n  lyrics,\n  duration: durationSeconds,\n  durationSeconds,\n  audioAsset,\n  selectedAudioCandidate: audioAsset,\n  coverWorkflow,\n  videoWorkflow,\n  imagePrompt: visualPrompt,\n  videoLoop: {\n    enabled: true,\n    durationSeconds,\n    seamlessMode: 'pingpong',\n    subtitleStyle: 'white_base_yellow_active'\n  },\n  youtube: {\n    title: text(youtube.title) || title,\n    description: text(youtube.description) || '',\n    tags: Array.isArray(youtube.tags) ? youtube.tags : []\n  },\n  delivery,\n  metadata: {\n    ...(source.metadata && typeof source.metadata === 'object' ? source.metadata : {}),\n    source: source?.metadata?.source ?? 'openclaw-visible-song-video-workflow',\n    traceId: traceId || undefined,\n    requestedProfile: 'youtube_music_video',\n    internalProfile: 'music_video_loop',\n    productWorkflow: 'song-word-highlight-video-submit-v1',\n    lyricOverlayStyle: 'white_base_yellow_active',\n    seamlessMode: 'pingpong'\n  },\n  route: 'continue'\n} }];"
+      },
+      "id": "whmv-2",
+      "name": "Validate and Build Workflow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-validation-route",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "continue"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "whmv-3",
+      "name": "Validation Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ (() => { let result = {}; try { result = $json.resultJson ? JSON.parse($json.resultJson) : {}; } catch {} return { requestId: $json.requestId, status: $json.status || result.status || 'failed', stage: $json.stage || result.stage, errorCode: $json.errorCode || result.errorCode, message: $json.message || result.message, jobId: $json.jobId, metadata: $json.metadata || { traceId: result.traceId } }; })() }}",
+        "options": {
+          "responseCode": "={{ (() => { try { return $json.responseCode || (JSON.parse($json.resultJson || '{}').responseCode) || 500; } catch { return $json.responseCode || 500; } })() }}"
+        }
+      },
+      "id": "whmv-4",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3040,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "SPGOyAFf0KBfcgp4",
+          "mode": "list",
+          "cachedResultName": "MediaPhase1Jobs",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/SPGOyAFf0KBfcgp4"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "requestId",
+              "keyValue": "={{ $('Validate and Build Workflow').item.json.requestId }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "whmv-14",
+      "name": "Load Existing Job",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        992,
+        304
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidateItems = $input.all().filter((item) => item?.json && Object.keys(item.json).length > 0 && item.json.requestId);\nconst existing = candidateItems[0]?.json;\nconst request = $('Validate and Build Workflow').first().json;\n\nif (existing) {\n  let acceptedAt = existing.updatedAtIso;\n  try {\n    const result = existing.resultJson ? JSON.parse(existing.resultJson) : null;\n    if (!acceptedAt && result?.acceptedAt) acceptedAt = result.acceptedAt;\n  } catch {}\n  return [{ json: {\n    requestId: existing.requestId,\n    status: existing.status || 'queued',\n    jobId: existing.jobId,\n    acceptedAt: acceptedAt || $now.toISO(),\n    idempotentReplay: true,\n    route: 'existing'\n  } }];\n}\n\nreturn [{ json: { ...request, route: 'submit' } }];"
+      },
+      "id": "whmv-15",
+      "name": "Existing Request?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-existing-route",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "existing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "whmv-18",
+      "name": "Replay Existing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1392,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ requestId: $json.requestId, status: $json.status || 'queued', jobId: $json.jobId, acceptedAt: $json.acceptedAt || $now.toISO(), workflow: 'song-word-highlight-video-submit-v1', idempotentReplay: true }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "whmv-19",
+      "name": "Respond Existing Ack",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1584,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.dispatchUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.MEDIA_WORKER_INGRESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.workerDispatchBody }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "whmv-5",
+      "name": "Dispatch To Worker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2640,
+        496
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "DzUYzgx8ecL1ETrc",
+          "name": "Cloudflare Access - Media Worker"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Prepare Worker Dispatch').first().json;\nconst response = $input.first().json;\n\nif (!response?.accepted || response?.jobId !== prepared.jobId) {\n  return [{ json: {\n    requestId: prepared.requestId,\n    status: 'failed',\n    stage: 'dispatch',\n    errorCode: 'WORKER_DISPATCH_FAILED',\n    message: 'media-worker-daemon did not accept the submitted job',\n    responseCode: 502,\n    route: 'error',\n    jobId: prepared.jobId,\n    metadata: {\n      traceId: prepared?.metadata?.traceId,\n      response\n    }\n  } }];\n}\n\nreturn [{ json: {\n  requestId: prepared.requestId,\n  jobId: prepared.jobId,\n  status: 'queued',\n  payloadJson: prepared.payloadJson,\n  resultJson: prepared.resultJson,\n  updatedAtIso: prepared.acceptedAt,\n  acceptedAt: prepared.acceptedAt,\n  metadata: prepared.metadata,\n  route: 'continue'\n} }];"
+      },
+      "id": "whmv-6",
+      "name": "Capture Dispatch Ack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-submit-route",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "whmv-7",
+      "name": "Job Started?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2832,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SPGOyAFf0KBfcgp4",
+          "mode": "list",
+          "cachedResultName": "MediaPhase1Jobs",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/SPGOyAFf0KBfcgp4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "requestId": "={{ $json.requestId }}",
+            "jobId": "={{ $json.jobId }}",
+            "status": "={{ $json.status }}",
+            "payloadJson": "={{ $json.payloadJson }}",
+            "resultJson": "={{ $json.resultJson }}",
+            "updatedAtIso": "={{ $json.updatedAtIso }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "requestId",
+              "displayName": "requestId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "jobId",
+              "displayName": "jobId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payloadJson",
+              "displayName": "payloadJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "resultJson",
+              "displayName": "resultJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updatedAtIso",
+              "displayName": "updatedAtIso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "whmv-16",
+      "name": "Create Job Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3040,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ requestId: $json.requestId, status: 'queued', jobId: $json.jobId, acceptedAt: $json.acceptedAt || $json.updatedAtIso, artifactOutput: 'callback_will_update_media_job_row', workflow: 'song-word-highlight-video-submit-v1', idempotentReplay: false }) }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "whmv-17",
+      "name": "Respond Queued Ack",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3264,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst selectedTarget = item.selectedWorker?.target || {};\nconst targetPreference = String($env.MEDIA_WORKER_TARGET_PREFERENCE || selectedTarget.targetPreference?.join?.(',') || 'cloudflare,tailscale,direct')\n  .split(',')\n  .map((entry) => entry.trim())\n  .filter(Boolean);\nconst candidateTargets = Array.isArray(selectedTarget.targets) ? selectedTarget.targets : [];\nfunction legacyTarget() {\n  const selectedJobsUrl = String(selectedTarget.dispatchJobsUrl || '').trim();\n  const selectedBaseUrl = String(selectedTarget.dispatchBaseUrl || '').trim().replace(/\\/+$/, '');\n  if (selectedJobsUrl || selectedBaseUrl) {\n    return { kind: selectedTarget.preferredTarget || selectedTarget.networkMode || 'legacy', baseUrl: selectedBaseUrl || null, jobsUrl: selectedJobsUrl || (selectedBaseUrl ? `${selectedBaseUrl}/jobs` : ''), reachable: null, auth: null };\n  }\n  return null;\n}\nfunction chooseTarget() {\n  for (const kind of targetPreference) {\n    const target = candidateTargets.find((candidate) => candidate.kind === kind && candidate.reachable !== false && candidate.jobsUrl);\n    if (target) return target;\n  }\n  return candidateTargets.find((candidate) => candidate.reachable !== false && candidate.jobsUrl) || legacyTarget();\n}\nconst chosenTarget = chooseTarget();\nconst fallbackBaseUrl = (($env.MEDIA_WORKER_BASE_URL || 'https://media-worker.techmatrx.com').trim()).replace(/\\/+$/, '');\nconst workerJobsUrl = chosenTarget?.jobsUrl || (fallbackBaseUrl ? `${fallbackBaseUrl}/jobs` : '');\nconst ingressToken = ($env.MEDIA_WORKER_INGRESS_TOKEN || '').trim();\nif (!workerJobsUrl) {\n  return [{ json: { requestId: item.requestId, status: 'failed', stage: 'dispatch', errorCode: 'MEDIA_WORKER_BASE_URL_NOT_CONFIGURED', message: 'MEDIA_WORKER_BASE_URL is not configured in n8n', responseCode: 500, route: 'error', metadata: { traceId: item?.metadata?.traceId } } }];\n}\nif (!ingressToken) {\n  return [{ json: { requestId: item.requestId, status: 'failed', stage: 'dispatch', errorCode: 'MEDIA_WORKER_INGRESS_TOKEN_NOT_CONFIGURED', message: 'MEDIA_WORKER_INGRESS_TOKEN is not configured in n8n', responseCode: 500, route: 'error', metadata: { traceId: item?.metadata?.traceId } } }];\n}\nconst jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;\nconst acceptedAt = $now.toISO();\nconst mediaPayload = {\n  workflow: {},\n  audioAsset: item.audioAsset,\n  selectedAudioCandidate: item.selectedAudioCandidate || item.audioAsset,\n  lyrics: item.lyrics,\n  tags: item.tags,\n  duration: item.duration,\n  durationSeconds: item.durationSeconds,\n  coverWorkflow: item.coverWorkflow,\n  videoWorkflow: item.videoWorkflow,\n  imagePrompt: item.imagePrompt,\n  videoLoop: item.videoLoop,\n  youtube: item.youtube,\n  delivery: item.delivery,\n  metadata: {\n    ...item.metadata,\n    selectedWorker: item.selectedWorker,\n    selectedDispatchTarget: chosenTarget || null\n  }\n};\nconst payloadJson = JSON.stringify(mediaPayload);\nconst resultJson = JSON.stringify({ provider: 'media-worker-daemon', traceId: item?.metadata?.traceId, acceptedAt, status: 'queued', selectedWorker: item.selectedWorker, selectedDispatchTarget: chosenTarget || null });\nreturn [{ json: {\n  ...item,\n  jobId,\n  acceptedAt,\n  payloadJson,\n  resultJson,\n  dispatchUrl: workerJobsUrl,\n  selectedDispatchTarget: chosenTarget || null,\n  workerDispatchBody: { jobId, requestId: item.requestId, profile: item.profile, payload: mediaPayload },\n  route: 'continue'\n} }];"
+      },
+      "id": "whmv-20",
+      "name": "Prepare Worker Dispatch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        384
+      ]
+    },
+    {
+      "id": "whmv-27",
+      "name": "Load Ready Workers",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        384
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "V1zRtKHvsME9BgkO",
+          "mode": "list",
+          "cachedResultName": "MediaWorkers",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/V1zRtKHvsME9BgkO"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "keyValue": "ok"
+            }
+          ]
+        },
+        "limit": 20
+      }
+    },
+    {
+      "id": "whmv-28",
+      "name": "Select Ready Worker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        384
+      ],
+      "parameters": {
+        "jsCode": "const request = $('Validate and Build Workflow').first().json;\nconst now = Date.now();\nconst maxAgeMs = Number($env.MEDIA_WORKER_HEARTBEAT_MAX_AGE_MS || 180000);\nconst requiredMediaType = 'audio';\nconst requiredProfile = request.profile || 'music_acestep_turbo';\n\nfunction list(value) {\n  return String(value || '')\n    .split(',')\n    .map((entry) => entry.trim())\n    .filter(Boolean);\n}\n\nfunction isFresh(worker) {\n  const updatedAt = Date.parse(worker.updatedAtIso || worker.updatedAt || worker.createdAt || '');\n  return Number.isFinite(updatedAt) && now - updatedAt <= maxAgeMs;\n}\n\nfunction parseHeartbeat(worker) {\n  try {\n    return worker.heartbeatJson ? JSON.parse(worker.heartbeatJson) : {};\n  } catch {\n    return {};\n  }\n}\n\nfunction normalizeTarget(target) {\n  if (!target || !target.kind) return null;\n  return {\n    kind: target.kind,\n    baseUrl: target.baseUrl || null,\n    jobsUrl: target.jobsUrl || null,\n    auth: target.auth || null,\n    reachable: target.reachable ?? null,\n    status: target.status ?? null,\n    latencyMs: target.latencyMs ?? null,\n    error: target.error || null\n  };\n}\n\nfunction targetMetadata(worker) {\n  const heartbeat = parseHeartbeat(worker);\n  const dispatch = heartbeat.dispatch || {};\n  const network = heartbeat.network || {};\n  const targets = Array.isArray(dispatch.targets)\n    ? dispatch.targets.map(normalizeTarget).filter(Boolean)\n    : [];\n  return {\n    dispatchBaseUrl: dispatch.baseUrl || null,\n    dispatchJobsUrl: dispatch.jobsUrl || null,\n    publicBaseUrl: dispatch.publicBaseUrl || null,\n    preferredTarget: dispatch.preferredTarget || null,\n    targetPreference: Array.isArray(dispatch.targetPreference) ? dispatch.targetPreference : [],\n    targets,\n    networkMode: network.mode || null,\n    tailscaleName: network.tailscaleName || worker.tailscaleName || null,\n    tailscaleIp: network.tailscaleIp || worker.tailscaleIp || null\n  };\n}\n\nconst workers = $input.all()\n  .map((item) => item.json || {})\n  .filter((worker) => worker.workerId)\n  .filter((worker) => worker.status === 'ok')\n  .filter((worker) => !worker.drain)\n  .filter((worker) => Boolean(worker.capacityAvailable))\n  .filter((worker) => Number(worker.activeJobs || 0) < Number(worker.maxConcurrentJobs || 0))\n  .filter((worker) => Boolean(worker.comfyReachable))\n  .filter((worker) => list(worker.supportedMediaTypes).includes(requiredMediaType))\n  .filter((worker) => list(worker.supportedProfiles).includes(requiredProfile))\n  .filter(isFresh)\n  .sort((a, b) => Number(a.activeJobs || 0) - Number(b.activeJobs || 0));\n\nconst selectedWorker = workers[0];\nif (!selectedWorker) {\n  return [{ json: {\n    ...request,\n    status: 'failed',\n    stage: 'worker_selection',\n    errorCode: 'NO_READY_WORKER',\n    message: 'No ready media worker is available for this request',\n    responseCode: 503,\n    route: 'error',\n    workerSelection: {\n      requiredMediaType,\n      requiredProfile,\n      maxAgeMs,\n      observedWorkers: $input.all().map((item) => ({\n        workerId: item.json?.workerId,\n        status: item.json?.status,\n        drain: item.json?.drain,\n        activeJobs: item.json?.activeJobs,\n        maxConcurrentJobs: item.json?.maxConcurrentJobs,\n        capacityAvailable: item.json?.capacityAvailable,\n        comfyReachable: item.json?.comfyReachable,\n        updatedAtIso: item.json?.updatedAtIso\n      }))\n    },\n    metadata: request.metadata\n  } }];\n}\n\nreturn [{ json: {\n  ...request,\n  route: 'continue',\n  selectedWorker: {\n    workerId: selectedWorker.workerId,\n    status: selectedWorker.status,\n    activeJobs: selectedWorker.activeJobs,\n    maxConcurrentJobs: selectedWorker.maxConcurrentJobs,\n    updatedAtIso: selectedWorker.updatedAtIso,\n    rabbitmqEnabled: selectedWorker.rabbitmqEnabled,\n    rabbitmqQueue: selectedWorker.rabbitmqQueue,\n    target: targetMetadata(selectedWorker)\n  }\n} }];"
+      }
+    },
+    {
+      "id": "whmv-29",
+      "name": "Worker Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        384
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-worker-ready",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "continue",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const error = $input.first().json;\nconst request = $('Validate and Build Workflow').first().json;\nconst updatedAtIso = $now.toISO();\nconst requestId = error.requestId || request.requestId;\nconst payloadJson = JSON.stringify({\n  profile: request.profile,\n  tags: request.tags,\n  lyrics: request.lyrics,\n  duration: request.duration,\n  durationSeconds: request.durationSeconds,\n  audioAsset: request.audioAsset,\n  imagePrompt: request.imagePrompt,\n  videoLoop: request.videoLoop,\n  metadata: request.metadata,\n  workflowFile: request.workflowFile,\n  dispatchMode: error?.metadata?.dispatchMode || null,\n  selectedWorker: error?.metadata?.selectedWorker || null,\n  replayGuard: true\n});\nconst resultJson = JSON.stringify({\n  status: 'failed',\n  stage: error.stage || 'pre-dispatch',\n  errorCode: error.errorCode || 'PRE_DISPATCH_FAILED',\n  message: error.message || 'Request failed before durable dispatch',\n  responseCode: error.responseCode || 500,\n  traceId: error?.metadata?.traceId || request?.metadata?.traceId,\n  replayGuard: true,\n  failedAt: updatedAtIso\n});\nreturn [{ json: {\n  requestId,\n  jobId: error.jobId || '',\n  status: 'failed',\n  payloadJson,\n  resultJson,\n  updatedAtIso,\n  responseCode: error.responseCode || 500,\n  stage: error.stage || 'pre-dispatch',\n  errorCode: error.errorCode || 'PRE_DISPATCH_FAILED',\n  message: error.message || 'Request failed before durable dispatch',\n  metadata: error.metadata || request.metadata || {},\n  route: 'failed-row'\n} }];"
+      },
+      "id": "whmv-30",
+      "name": "Build Failed Job Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SPGOyAFf0KBfcgp4",
+          "mode": "list",
+          "cachedResultName": "MediaPhase1Jobs",
+          "cachedResultUrl": "/projects/U1Bc4pAxfxpZa9Zn/datatables/SPGOyAFf0KBfcgp4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "requestId": "={{ $json.requestId }}",
+            "jobId": "={{ $json.jobId }}",
+            "status": "={{ $json.status }}",
+            "payloadJson": "={{ $json.payloadJson }}",
+            "resultJson": "={{ $json.resultJson }}",
+            "updatedAtIso": "={{ $json.updatedAtIso }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "requestId",
+              "displayName": "requestId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "jobId",
+              "displayName": "jobId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payloadJson",
+              "displayName": "payloadJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "resultJson",
+              "displayName": "resultJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updatedAtIso",
+              "displayName": "updatedAtIso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "whmv-31",
+      "name": "Create Failed Job Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2768,
+        704
+      ]
+    }
+  ],
+  "connections": {
+    "Validate and Build Workflow": {
+      "main": [
+        [
+          {
+            "node": "Validation Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Passed?": {
+      "main": [
+        [
+          {
+            "node": "Load Existing Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Existing Job": {
+      "main": [
+        [
+          {
+            "node": "Existing Request?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existing Request?": {
+      "main": [
+        [
+          {
+            "node": "Replay Existing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replay Existing?": {
+      "main": [
+        [
+          {
+            "node": "Respond Existing Ack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Load Ready Workers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch To Worker": {
+      "main": [
+        [
+          {
+            "node": "Capture Dispatch Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Dispatch Ack": {
+      "main": [
+        [
+          {
+            "node": "Job Started?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Started?": {
+      "main": [
+        [
+          {
+            "node": "Create Job Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Failed Job Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Job Row": {
+      "main": [
+        [
+          {
+            "node": "Respond Queued Ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Worker Dispatch": {
+      "main": [
+        [
+          {
+            "node": "Dispatch To Worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Ready Workers": {
+      "main": [
+        [
+          {
+            "node": "Select Ready Worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Ready Worker": {
+      "main": [
+        [
+          {
+            "node": "Worker Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker Ready?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Worker Dispatch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Failed Job Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Failed Job Row": {
+      "main": [
+        [
+          {
+            "node": "Create Failed Job Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Failed Job Row": {
+      "main": [
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Song Video Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate and Build Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "tags": [],
+  "active": false
+}
