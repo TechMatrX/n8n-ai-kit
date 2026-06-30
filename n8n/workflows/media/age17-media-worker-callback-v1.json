@@ -1,14 +1,14 @@
 {
   "_openclawExport": {
-    "exportedAt": "2026-06-17T08:22:00.000Z",
+    "exportedAt": "2026-06-30T06:16:14.834Z",
     "source": "n8n_get_workflow",
     "purpose": "Version live shared media worker callback workflow from n8n",
     "workflowId": "iW06DQkM5ZqaeEdt",
     "workflowName": "AGE17 Dev - Media Worker Callback v1",
     "activeAtExport": true,
-    "versionId": "b07602e1-21ba-40ed-86aa-88e289bd2a15",
-    "activeVersionId": "b07602e1-21ba-40ed-86aa-88e289bd2a15",
-    "versionCounter": 5
+    "versionId": "4e48c41f-7a41-4b40-9fc9-0f095cbf0f1e",
+    "activeVersionId": "4e48c41f-7a41-4b40-9fc9-0f095cbf0f1e",
+    "versionCounter": 12
   },
   "name": "AGE17 Dev - Media Worker Callback v1",
   "nodes": [
@@ -127,7 +127,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const callback = $('Authenticate and Validate Callback').first().json;\nconst rows = $input.all().filter((item) => item?.json && Object.keys(item.json).length > 0 && item.json.requestId);\nconst existing = rows[0]?.json;\n\nif (!existing) {\n  return [{ json: { requestId: callback.requestId, jobId: callback.jobId, status: 'failed', stage: 'lookup', errorCode: 'JOB_NOT_FOUND', message: 'No Phase 1 job row found for requestId', responseCode: 404, route: 'error' } }];\n}\nif (existing.jobId && existing.jobId !== callback.jobId) {\n  return [{ json: { requestId: callback.requestId, jobId: callback.jobId, status: 'failed', stage: 'lookup', errorCode: 'JOB_ID_MISMATCH', message: 'Callback jobId does not match persisted requestId row', responseCode: 409, route: 'error' } }];\n}\nconst existingStatus = typeof existing.status === 'string' ? existing.status : '';\nconst terminalStatuses = new Set(['completed', 'failed', 'cancelled']);\nif (terminalStatuses.has(existingStatus)) {\n  return [{ json: { requestId: existing.requestId, jobId: existing.jobId, status: existing.status, acceptedAt: existing.updatedAtIso || $now.toISO(), duplicateTerminal: true, route: 'duplicate' } }];\n}\nconst resultPayload = {\n  status: callback.status,\n  workerId: callback.workerId,\n  promptId: callback.promptId || null,\n  assetUrls: callback.assetUrls,\n  outputPath: callback.outputPath,\n  mimeType: callback.mimeType,\n  duration: callback.duration,\n  sizeBytes: callback.sizeBytes,\n  assets: callback.assets,\n  storage: callback.storage,\n  downloadUrl: callback.downloadUrl,\n  error: callback.error,\n  timing: callback.timing,\n  metadata: callback.metadata,\n  completedAt: callback.completedAt\n};\nconst updatedAtIso = callback.completedAt || $now.toISO();\nreturn [{ json: {\n  requestId: callback.requestId,\n  jobId: callback.jobId,\n  status: callback.status,\n  payloadJson: existing.payloadJson || '',\n  resultJson: JSON.stringify(resultPayload),\n  updatedAtIso,\n  completionPayload: {\n    requestId: callback.requestId,\n    status: callback.status,\n    assetUrls: callback.assetUrls,\n    outputPath: callback.outputPath,\n    mimeType: callback.mimeType,\n    duration: callback.duration,\n    sizeBytes: callback.sizeBytes,\n    assets: callback.assets,\n    storage: callback.storage,\n    downloadUrl: callback.downloadUrl,\n    metadata: {\n      workerId: callback.workerId,\n      promptId: callback.promptId || null,\n      profile: callback.metadata?.profile || 'acestep_turbo'\n    },\n    error: callback.error || null\n  },\n  route: 'update'\n} }];"
+        "jsCode": "const callback = $('Authenticate and Validate Callback').first().json;\nconst rows = $input.all().filter((item) => item?.json && Object.keys(item.json).length > 0 && item.json.requestId);\nconst existing = rows[0]?.json;\nconst updatedAtIso = callback.completedAt || $now.toISO();\nconst profile = callback.metadata?.profile || callback.metadata?.workerProfile || callback.metadata?.mediaProfile || null;\nconst resultPayload = {\n  status: callback.status,\n  workerId: callback.workerId,\n  promptId: callback.promptId || null,\n  assetUrls: callback.assetUrls,\n  outputPath: callback.outputPath,\n  mimeType: callback.mimeType,\n  duration: callback.duration,\n  sizeBytes: callback.sizeBytes,\n  assets: callback.assets,\n  storage: callback.storage,\n  downloadUrl: callback.downloadUrl,\n  error: callback.error,\n  timing: callback.timing,\n  metadata: callback.metadata,\n  delivery: callback.delivery,\n  completedAt: callback.completedAt,\n  artifactCount: callback.artifactCount,\n  artifactRoles: callback.artifactRoles\n};\nconst completionPayload = {\n  requestId: callback.requestId,\n  jobId: callback.jobId,\n  status: callback.status,\n  assetUrls: callback.assetUrls,\n  outputPath: callback.outputPath,\n  mimeType: callback.mimeType,\n  duration: callback.duration,\n  sizeBytes: callback.sizeBytes,\n  assets: callback.assets,\n  storage: callback.storage,\n  downloadUrl: callback.downloadUrl,\n  artifactCount: callback.artifactCount,\n  artifactRoles: callback.artifactRoles,\n  metadata: {\n    ...(callback.metadata && typeof callback.metadata === 'object' ? callback.metadata : {}),\n    workerId: callback.workerId,\n    promptId: callback.promptId || null,\n    profile\n  },\n  delivery: callback.delivery,\n  error: callback.error || null\n};\n\nif (!existing) {\n  return [{ json: {\n    requestId: callback.requestId,\n    jobId: callback.jobId,\n    status: callback.status,\n    payloadJson: '',\n    resultJson: JSON.stringify(resultPayload),\n    updatedAtIso,\n    completionPayload,\n    missingJobRow: true,\n    stage: 'lookup',\n    warningCode: 'JOB_NOT_FOUND',\n    message: 'No Phase 1 job row found for requestId; notifying from callback payload only',\n    route: 'update'\n  } }];\n}\nif (existing.jobId && existing.jobId !== callback.jobId) {\n  return [{ json: { requestId: callback.requestId, jobId: callback.jobId, status: 'failed', stage: 'lookup', errorCode: 'JOB_ID_MISMATCH', message: 'Callback jobId does not match persisted requestId row', responseCode: 409, route: 'error' } }];\n}\nconst existingStatus = typeof existing.status === 'string' ? existing.status : '';\nconst terminalStatuses = new Set(['completed', 'failed', 'cancelled']);\nif (terminalStatuses.has(existingStatus)) {\n  return [{ json: { requestId: existing.requestId, jobId: existing.jobId, status: existing.status, acceptedAt: existing.updatedAtIso || $now.toISO(), duplicateTerminal: true, route: 'duplicate' } }];\n}\nreturn [{ json: {\n  requestId: callback.requestId,\n  jobId: callback.jobId,\n  status: callback.status,\n  payloadJson: existing.payloadJson || '',\n  resultJson: JSON.stringify(resultPayload),\n  updatedAtIso,\n  completionPayload,\n  route: 'update'\n} }];"
       },
       "id": "6",
       "name": "Evaluate Terminal State",
@@ -465,13 +465,7 @@
             "node": "Update Terminal Row",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Terminal Row": {
-      "main": [
-        [
+          },
           {
             "node": "Resolve Notify Target",
             "type": "main",
