@@ -227,7 +227,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ (() => { const ledger = $('Record Private Publish Ledger').first().json; const thumbnail = $json || {}; const thumbnailError = thumbnail.error || thumbnail.message || null; const thumbnailSet = !thumbnailError; try { const workflowStatic = $getWorkflowStaticData('global'); const key = ledger.ledgerKey; const existingLedger = workflowStatic && workflowStatic.youtubePublishLedger ? workflowStatic.youtubePublishLedger : null; if (existingLedger && existingLedger[key]) { existingLedger[key].thumbnailStatus = thumbnailSet ? 'set' : 'failed'; existingLedger[key].thumbnailUpdatedAt = new Date().toISOString(); if (thumbnailError) existingLedger[key].thumbnailError = thumbnailError; } } catch (error) {} return { ok: true, status: thumbnailSet ? 'private_publish_recorded_thumbnail_set' : 'private_publish_recorded_thumbnail_failed', requestId: $('Validate Private Publish Gate').first().json.requestId, videoId: ledger.videoId, ledgerRecorded: ledger.ledgerRecorded, ledgerKey: ledger.ledgerKey, uploadPlan: ledger.uploadPlan, youtubeUpload: ledger.youtubeUpload, thumbnailAttempted: true, thumbnailSet, thumbnailError }; })() }}",
+        "responseBody": "={{ $json }}",
         "options": {
           "responseCode": 200
         }
@@ -237,9 +237,22 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2320,
+        2580,
         220
       ]
+    },
+    {
+      "id": "ytpriv-11",
+      "name": "Build Private Publish Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const thumbnail = $input.first().json || {};\nconst ledger = $('Record Private Publish Ledger').first().json || {};\nconst uploadPlan = ledger.uploadPlan || $('Validate Private Publish Gate').first().json.uploadPlan || {};\nconst videoId = ledger.videoId || ledger.uploadId || null;\nconst thumbnailError = thumbnail.error || thumbnail.message || thumbnail.errorMessage || null;\nconst thumbnailSet = !thumbnailError;\nconst key = ledger.ledgerKey || String(uploadPlan.duplicateKey || uploadPlan.requestId || '').trim();\ntry {\n  const workflowStatic = $getWorkflowStaticData('global');\n  workflowStatic.youtubePublishLedger = workflowStatic.youtubePublishLedger || {};\n  if (key) {\n    const existing = workflowStatic.youtubePublishLedger[key] || {};\n    workflowStatic.youtubePublishLedger[key] = {\n      ...existing,\n      requestId: uploadPlan.requestId || existing.requestId || key,\n      videoId: videoId || existing.videoId || null,\n      title: uploadPlan.title || existing.title || null,\n      privacyStatus: 'private',\n      artifactPageUrl: uploadPlan.artifactPageUrl || existing.artifactPageUrl || null,\n      thumbnailStatus: thumbnailSet ? 'set' : 'failed',\n      thumbnailUpdatedAt: new Date().toISOString(),\n      ...(thumbnailError ? { thumbnailError } : {})\n    };\n  }\n} catch (error) {}\nreturn [{\n  json: {\n    ok: true,\n    status: thumbnailSet ? 'private_publish_recorded_thumbnail_set' : 'private_publish_recorded_thumbnail_failed',\n    requestId: uploadPlan.requestId || key,\n    videoId,\n    privacyStatus: 'private',\n    title: uploadPlan.title || null,\n    artifactPageUrl: uploadPlan.artifactPageUrl || null,\n    finalVideoUrl: uploadPlan.finalVideoUrl || null,\n    thumbnailUrl: uploadPlan.thumbnailUrl || null,\n    ledgerRecorded: Boolean(ledger.ledgerRecorded),\n    ledgerKey: key,\n    thumbnailAttempted: true,\n    thumbnailSet,\n    thumbnailStatus: thumbnailSet ? 'set' : 'failed',\n    thumbnailError,\n    youtubeUpload: ledger.youtubeUpload || null,\n    thumbnailResponse: thumbnail\n  }\n}];"
+      }
     }
   ],
   "connections": {
@@ -320,7 +333,7 @@
       "main": [
         [
           {
-            "node": "Respond Private Publish Complete",
+            "node": "Build Private Publish Result",
             "type": "main",
             "index": 0
           }
@@ -332,6 +345,17 @@
         [
           {
             "node": "Download Thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Private Publish Result": {
+      "main": [
+        [
+          {
+            "node": "Respond Private Publish Complete",
             "type": "main",
             "index": 0
           }
