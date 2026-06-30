@@ -29,9 +29,9 @@
       "title": "Reviewed Private Upload Title",
       "description": "Reviewed description. Include credits, provenance, and source artifact context here.",
       "tags": [
-        "ai music",
+        "original music",
         "cinematic music",
-        "openclaw"
+        "birthday song"
       ],
       "privacyStatus": "private",
       "categoryId": "10",
@@ -43,7 +43,7 @@
       "source": "media-worker-callback",
       "approvalRequired": true,
       "approvalMode": "manual-token",
-      "thumbnailPolicy": "manual_until_channel_custom_thumbnail_permission_enabled",
+      "thumbnailPolicy": "set_during_private_publish_with_retry",
       "reviewedBy": "Andy",
       "reviewedAt": "YYYY-MM-DDTHH:mm:ss+07:00"
     }

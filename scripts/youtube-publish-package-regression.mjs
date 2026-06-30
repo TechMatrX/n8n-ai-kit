@@ -27,7 +27,7 @@ assert.equal(preflight.uploadPlan.finalVideoRole, null);
 assert.equal(preflight.uploadPlan.thumbnailRole, null);
 assert.equal(
   fixture.metadata.publishing.thumbnailPolicy,
-  "manual_until_channel_custom_thumbnail_permission_enabled",
+  "set_during_private_publish_with_retry",
 );
 
 const approved = validateYouTubePublishPackage(fixture, {
@@ -48,6 +48,15 @@ assert.equal(missingTagsResult.ok, false);
 assert.equal(missingTagsResult.status, "invalid_package");
 assert.ok(missingTagsResult.missing.includes("metadata.youtube.tags"));
 assert.ok(missingTagsResult.gateBlocks.some((block) => block.startsWith("missing:")));
+
+const karaokePublicTerm = clone(fixture);
+karaokePublicTerm.metadata.youtube.title = "Happy Birthday Lucy - Karaoke Song";
+karaokePublicTerm.metadata.youtube.description = "A warm karaoke birthday song.";
+karaokePublicTerm.metadata.youtube.tags = ["happy birthday", "karaoke"];
+const karaokePublicTermResult = validateYouTubePublishPackage(karaokePublicTerm);
+assert.equal(karaokePublicTermResult.ok, false);
+assert.equal(karaokePublicTermResult.status, "invalid_package");
+assert.ok(karaokePublicTermResult.validationErrors.some((error) => error.includes("blocked public term: karaoke")));
 
 const publicPackage = clone(fixture);
 publicPackage.metadata.youtube.privacyStatus = "public";

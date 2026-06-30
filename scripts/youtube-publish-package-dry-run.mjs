@@ -97,6 +97,26 @@ function explicitBoolean(...values) {
   return undefined;
 }
 
+const BLOCKED_PUBLIC_TERMS = [
+  "OpenClaw",
+  "media-worker",
+  "media worker",
+  "internal project",
+  "internal tool",
+  "n8n",
+  "ComfyUI",
+  "RabbitMQ",
+  "karaoke",
+];
+
+function blockedPublicTerm(value) {
+  const textValue = Array.isArray(value) ? value.join(", ") : String(value || "");
+  return BLOCKED_PUBLIC_TERMS.find((term) => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`\\b${escaped}\\b`, "i").test(textValue);
+  });
+}
+
 function assetUrl(asset) {
   return firstText(asset.downloadUrl, asset.publicUrl, asset.url, asset.storage?.downloadUrl, asset.href);
 }
@@ -194,6 +214,12 @@ export function validateYouTubePublishPackage(input, options = {}) {
   }
   if (title.length > 100) validationErrors.push("metadata.youtube.title exceeds 100 characters");
   if (description.length > 5000) validationErrors.push("metadata.youtube.description exceeds 5000 characters");
+  const titleBlockedTerm = blockedPublicTerm(title);
+  const descriptionBlockedTerm = blockedPublicTerm(description);
+  const tagsBlockedTerm = blockedPublicTerm(tags);
+  if (titleBlockedTerm) validationErrors.push(`metadata.youtube.title contains blocked public term: ${titleBlockedTerm}`);
+  if (descriptionBlockedTerm) validationErrors.push(`metadata.youtube.description contains blocked public term: ${descriptionBlockedTerm}`);
+  if (tagsBlockedTerm) validationErrors.push(`metadata.youtube.tags contains blocked public term: ${tagsBlockedTerm}`);
 
   const gateBlocks = [];
   if (missing.length) gateBlocks.push(`missing:${missing.join(",")}`);
