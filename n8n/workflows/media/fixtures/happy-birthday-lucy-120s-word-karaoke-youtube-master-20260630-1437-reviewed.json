@@ -1,0 +1,98 @@
+{
+  "requestId": "happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437",
+  "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/",
+  "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-music-video.mp4",
+  "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-youtube-thumbnail.jpg",
+  "assets": [
+    {
+      "role": "primary_video",
+      "mediaType": "video",
+      "mimeType": "video/mp4",
+      "filename": "happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-music-video.mp4",
+      "url": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-music-video.mp4",
+      "storage": {
+        "provider": "s3",
+        "endpoint": "http://100.73.253.62:9000",
+        "region": "us-east-1",
+        "bucket": "openclaw-media",
+        "key": "generated/video/2026/06/30/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-music-video.mp4",
+        "etag": "\"fbe5a7b52f42fb97f272dbb5d8b98567\"",
+        "mediaType": "video",
+        "sizeBytes": 26148349,
+        "mimeType": "video/mp4",
+        "downloadUrl": "http://100.73.253.62:9000/openclaw-media/generated/video/2026/06/30/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-music-video.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260630%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260630T074451Z&X-Amz-Expires=604800&X-Amz-Signature=53e76774e8eabc3f1bfe872c4e8d1d408750d4482f912168593e14f109971f1b&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "presignExpiresSeconds": 604800
+      }
+    },
+    {
+      "role": "cover",
+      "mediaType": "image",
+      "mimeType": "image/jpeg",
+      "filename": "happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-youtube-thumbnail.jpg",
+      "url": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-youtube-thumbnail.jpg",
+      "storage": {
+        "provider": "s3",
+        "endpoint": "http://100.73.253.62:9000",
+        "region": "us-east-1",
+        "bucket": "openclaw-media",
+        "key": "generated/image/2026/06/30/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-youtube-thumbnail.jpg",
+        "etag": "\"474911fdf2379a86677600a5c7f46d91\"",
+        "mediaType": "image",
+        "sizeBytes": 31300,
+        "mimeType": "image/jpeg",
+        "downloadUrl": "http://100.73.253.62:9000/openclaw-media/generated/image/2026/06/30/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-youtube-thumbnail.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260630%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260630T074451Z&X-Amz-Expires=604800&X-Amz-Signature=17d681915fa164e5a88cdfcc61c5b14b1dfa6587ac8d583b5195f8d6bc4f3e6d&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "presignExpiresSeconds": 604800
+      }
+    }
+  ],
+  "metadata": {
+    "requestId": "happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437",
+    "profile": "music_video_loop",
+    "youtube": {
+      "title": "Happy Birthday Lucy - Candlelight Karaoke",
+      "description": "A warm candlelight birthday song for Lucy with gentle karaoke lyrics. Private review copy.",
+      "tags": [
+        "happy birthday",
+        "birthday song",
+        "karaoke",
+        "Lucy",
+        "candlelight music"
+      ],
+      "privacyStatus": "private",
+      "categoryId": "10",
+      "regionCode": "VN",
+      "language": "en",
+      "madeForKids": false
+    },
+    "publishing": {
+      "duplicateKey": "happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437",
+      "source": "local-review-package-script",
+      "approvalRequired": true,
+      "approvalMode": "manual-token",
+      "thumbnailPolicy": "manual_until_channel_custom_thumbnail_permission_enabled",
+      "reviewedBy": "Andy",
+      "reviewedAt": "2026-06-30T07:44:51.827Z"
+    },
+    "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/",
+    "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-music-video.mp4",
+    "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437/happy-birthday-lucy-120s-word-karaoke-youtube-master-20260630-1437-youtube-thumbnail.jpg",
+    "title": "Happy Birthday Lucy - Candlelight Karaoke",
+    "description": "A warm candlelight birthday song for Lucy with gentle karaoke lyrics. Private review copy.",
+    "tags": [
+      "happy birthday",
+      "birthday song",
+      "karaoke",
+      "Lucy",
+      "candlelight music"
+    ]
+  },
+  "title": "Happy Birthday Lucy - Candlelight Karaoke",
+  "description": "A warm candlelight birthday song for Lucy with gentle karaoke lyrics. Private review copy.",
+  "tags": [
+    "happy birthday",
+    "birthday song",
+    "karaoke",
+    "Lucy",
+    "candlelight music"
+  ]
+}

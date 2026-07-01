@@ -1,0 +1,107 @@
+{
+  "requestId": "happy-birthday-andy-120s-word-highlight-final-20260630-2305",
+  "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/",
+  "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-music-video.mp4",
+  "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-youtube-thumbnail.png",
+  "assets": [
+    {
+      "role": "primary_video",
+      "mediaType": "video",
+      "mimeType": "video/mp4",
+      "filename": "happy-birthday-andy-120s-word-highlight-final-20260630-2305-music-video.mp4",
+      "url": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-music-video.mp4",
+      "storage": {
+        "provider": "s3",
+        "endpoint": "http://100.73.253.62:9000",
+        "region": "us-east-1",
+        "bucket": "openclaw-media",
+        "key": "generated/video/2026/06/30/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-music-video.mp4",
+        "etag": "\"077261c4a7a7f25c7e919d7430f3f623\"",
+        "mediaType": "video",
+        "sizeBytes": 19151856,
+        "mimeType": "video/mp4",
+        "downloadUrl": "http://100.73.253.62:9000/openclaw-media/generated/video/2026/06/30/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-music-video.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260630%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260630T160745Z&X-Amz-Expires=604800&X-Amz-Signature=ae6aee850ede15b76d688b2603515df17377ff1e604a67dd4ebf1d675e2140a3&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "presignExpiresSeconds": 604800
+      }
+    },
+    {
+      "role": "cover",
+      "mediaType": "image",
+      "mimeType": "image/png",
+      "filename": "happy-birthday-andy-120s-word-highlight-final-20260630-2305-youtube-thumbnail.png",
+      "url": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-youtube-thumbnail.png",
+      "storage": {
+        "provider": "s3",
+        "endpoint": "http://100.73.253.62:9000",
+        "region": "us-east-1",
+        "bucket": "openclaw-media",
+        "key": "generated/image/2026/06/30/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-youtube-thumbnail.png",
+        "etag": "\"9bcc817dd214d64b64629432c58d6339\"",
+        "mediaType": "image",
+        "sizeBytes": 511584,
+        "mimeType": "image/png",
+        "downloadUrl": "http://100.73.253.62:9000/openclaw-media/generated/image/2026/06/30/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-youtube-thumbnail.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260630%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260630T160746Z&X-Amz-Expires=604800&X-Amz-Signature=33bbea0eb1c341d6536a852f19085c7ddb5401b4a31bb963c178e9d18a6390c5&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "presignExpiresSeconds": 604800
+      }
+    }
+  ],
+  "metadata": {
+    "requestId": "happy-birthday-andy-120s-word-highlight-final-20260630-2305",
+    "profile": "music_video_loop",
+    "youtube": {
+      "title": "Happy Birthday Andy - Birthday Song",
+      "description": "A warm birthday song for Andy, made for joyful family celebrations around the world.",
+      "tags": [
+        "happy birthday",
+        "birthday song",
+        "Andy",
+        "birthday music",
+        "birthday wishes",
+        "family celebration",
+        "celebration song",
+        "KMV STUDIO"
+      ],
+      "privacyStatus": "private",
+      "categoryId": "10",
+      "regionCode": "VN",
+      "language": "en",
+      "madeForKids": false
+    },
+    "publishing": {
+      "duplicateKey": "happy-birthday-andy-120s-word-highlight-final-20260630-2305",
+      "source": "local-review-package-script",
+      "approvalRequired": true,
+      "approvalMode": "manual-token",
+      "thumbnailPolicy": "manual_until_channel_custom_thumbnail_permission_enabled",
+      "reviewedBy": "Andy",
+      "reviewedAt": "2026-06-30T16:07:46.894Z"
+    },
+    "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/",
+    "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-music-video.mp4",
+    "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-andy-120s-word-highlight-final-20260630-2305/happy-birthday-andy-120s-word-highlight-final-20260630-2305-youtube-thumbnail.png",
+    "title": "Happy Birthday Andy - Birthday Song",
+    "description": "A warm birthday song for Andy, made for joyful family celebrations around the world.",
+    "tags": [
+      "happy birthday",
+      "birthday song",
+      "Andy",
+      "birthday music",
+      "birthday wishes",
+      "family celebration",
+      "celebration song",
+      "KMV STUDIO"
+    ]
+  },
+  "title": "Happy Birthday Andy - Birthday Song",
+  "description": "A warm birthday song for Andy, made for joyful family celebrations around the world.",
+  "tags": [
+    "happy birthday",
+    "birthday song",
+    "Andy",
+    "birthday music",
+    "birthday wishes",
+    "family celebration",
+    "celebration song",
+    "KMV STUDIO"
+  ]
+}

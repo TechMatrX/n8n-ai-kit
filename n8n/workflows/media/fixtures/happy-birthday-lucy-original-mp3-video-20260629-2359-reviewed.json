@@ -1,0 +1,98 @@
+{
+  "requestId": "happy-birthday-lucy-original-mp3-video-20260629-2359",
+  "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/",
+  "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-music-video.mp4",
+  "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-youtube-thumbnail.png",
+  "assets": [
+    {
+      "role": "primary_video",
+      "mediaType": "video",
+      "mimeType": "video/mp4",
+      "filename": "happy-birthday-lucy-original-mp3-video-20260629-2359-music-video.mp4",
+      "url": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-music-video.mp4",
+      "storage": {
+        "provider": "s3",
+        "endpoint": "http://100.73.253.62:9000",
+        "region": "us-east-1",
+        "bucket": "openclaw-media",
+        "key": "generated/video/2026/06/29/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-music-video.mp4",
+        "etag": "\"d4cf923ef01ba62eb242dbc10429b0bd\"",
+        "mediaType": "video",
+        "sizeBytes": 16454756,
+        "mimeType": "video/mp4",
+        "downloadUrl": "http://100.73.253.62:9000/openclaw-media/generated/video/2026/06/29/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-music-video.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260629%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260629T174117Z&X-Amz-Expires=604800&X-Amz-Signature=933844212f8fa20467c02b55a8527c9416a8c7f58b3d8536f8e3402795fd305d&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "presignExpiresSeconds": 604800
+      }
+    },
+    {
+      "role": "cover",
+      "mediaType": "image",
+      "mimeType": "image/png",
+      "filename": "happy-birthday-lucy-original-mp3-video-20260629-2359-youtube-thumbnail.png",
+      "url": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-youtube-thumbnail.png",
+      "storage": {
+        "provider": "s3",
+        "endpoint": "http://100.73.253.62:9000",
+        "region": "us-east-1",
+        "bucket": "openclaw-media",
+        "key": "generated/image/2026/06/29/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-youtube-thumbnail.png",
+        "etag": "\"65f5bec648c2b852fe5702543ebdd668\"",
+        "mediaType": "image",
+        "sizeBytes": 587291,
+        "mimeType": "image/png",
+        "downloadUrl": "http://100.73.253.62:9000/openclaw-media/generated/image/2026/06/29/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-youtube-thumbnail.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=media-worker-ea107790f653%2F20260629%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260629T174117Z&X-Amz-Expires=604800&X-Amz-Signature=bd510e5fc6edaf3eff781ee7f2777feebbe2ad8f1a4b1629b23865532215fcd1&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+        "presignExpiresSeconds": 604800
+      }
+    }
+  ],
+  "metadata": {
+    "requestId": "happy-birthday-lucy-original-mp3-video-20260629-2359",
+    "profile": "music_video_loop",
+    "youtube": {
+      "title": "Happy Birthday Lucy",
+      "description": "A warm birthday music video with candlelight visuals, gentle movement, and timed lyric overlay.",
+      "tags": [
+        "birthday song",
+        "Happy Birthday Lucy",
+        "birthday music video",
+        "lyric video",
+        "candlelight"
+      ],
+      "privacyStatus": "private",
+      "categoryId": "10",
+      "regionCode": "VN",
+      "language": "en",
+      "madeForKids": false
+    },
+    "publishing": {
+      "duplicateKey": "happy-birthday-lucy-original-mp3-video-20260629-2359",
+      "source": "local-review-package-script",
+      "approvalRequired": true,
+      "approvalMode": "manual-token",
+      "thumbnailPolicy": "manual_until_channel_custom_thumbnail_permission_enabled",
+      "reviewedBy": "Andy",
+      "reviewedAt": "2026-06-29T17:41:18.125Z"
+    },
+    "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/",
+    "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-music-video.mp4",
+    "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-original-mp3-video-20260629-2359/happy-birthday-lucy-original-mp3-video-20260629-2359-youtube-thumbnail.png",
+    "title": "Happy Birthday Lucy",
+    "description": "A warm birthday music video with candlelight visuals, gentle movement, and timed lyric overlay.",
+    "tags": [
+      "birthday song",
+      "Happy Birthday Lucy",
+      "birthday music video",
+      "lyric video",
+      "candlelight"
+    ]
+  },
+  "title": "Happy Birthday Lucy",
+  "description": "A warm birthday music video with candlelight visuals, gentle movement, and timed lyric overlay.",
+  "tags": [
+    "birthday song",
+    "Happy Birthday Lucy",
+    "birthday music video",
+    "lyric video",
+    "candlelight"
+  ]
+}

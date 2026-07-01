@@ -1,0 +1,32 @@
+{
+  "requestId": "happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626",
+  "artifactPageUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626/",
+  "finalVideoUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626/happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626-music-video.mp4",
+  "thumbnailUrl": "https://openclaw-media.techmatrx.com/artifacts/happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626/happy-birthday-lucy-120s-karaoke-launch-clean-cover-20260630-1625.png",
+  "confirm": "publish-to-youtube",
+  "metadata": {
+    "requestId": "happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626",
+    "youtube": {
+      "title": "Happy Birthday Lucy - Karaoke Song",
+      "description": "A warm birthday karaoke song for Lucy, made for joyful family celebrations around the world.",
+      "tags": [
+        "happy birthday",
+        "birthday song",
+        "karaoke",
+        "Lucy",
+        "birthday karaoke",
+        "family celebration",
+        "KMV STUDIO"
+      ],
+      "privacyStatus": "private",
+      "categoryId": "10",
+      "regionCode": "VN",
+      "language": "en",
+      "defaultLanguage": "en",
+      "madeForKids": false
+    },
+    "publishing": {
+      "duplicateKey": "happy-birthday-lucy-120s-karaoke-launch-clean-visual-20260630-1626"
+    }
+  }
+}
