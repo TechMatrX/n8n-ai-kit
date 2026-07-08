@@ -5,7 +5,7 @@
     "purpose": "Version inactive career JD/CV review submit workflow from n8n",
     "workflowId": "s1YNvxn73onMsdYY",
     "workflowName": "AGE17 Dev - Career JD CV Review Submit v1",
-    "activeAtExport": false,
+    "activeAtExport": true,
     "versionId": "fc9edf83-256a-4778-ad01-5b312dad037c",
     "activeVersionId": null,
     "versionCounter": 1
@@ -81,6 +81,8 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $json.dispatchUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -104,7 +106,13 @@
       "position": [
         1080,
         220
-      ]
+      ],
+      "credentials": {
+        "httpCustomAuth": {
+          "id": "DzUYzgx8ecL1ETrc",
+          "name": "Cloudflare Access - Media Worker"
+        }
+      }
     },
     {
       "parameters": {

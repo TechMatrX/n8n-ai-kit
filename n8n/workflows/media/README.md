@@ -38,7 +38,7 @@ Workflows covered by this policy:
 | AGE17 Dev - Mermaid Preview Submit v1 | `XyKli7nWYa2JLjPJ` | success `all`, error `all` |
 | AGE17 Dev - Markdown Presentation Submit v1 | `Y5aNKgs7P0bJrEJY` | success `all`, error `all` |
 | AGE17 Dev - Markdown Mindmap Submit v1 | `R1X0civ6trpBVQbV` | success `all`, error `all` |
-| AGE17 Dev - Career JD CV Review Submit v1 | `s1YNvxn73onMsdYY` | success `all`, error `all`; inactive |
+| AGE17 Dev - Career JD CV Review Submit v1 | `s1YNvxn73onMsdYY` | success `all`, error `all`; active |
 | AGE17 Dev - Music Generate acestep_turbo Submit v2 | `ma2PY9x1YIcNlEBm` | success `all`, error `all` |
 | AGE17 Dev - Music Generate acestep_turbo | `CCc3iuVmmLBfCdNu` | success `all`, error `all` |
 
@@ -91,8 +91,17 @@ n8n/workflows/media/age17-career-jd-cv-review-submit-v1.json
 
 This workflow accepts a job description plus an uploaded or pasted CV, validates
 that both sources are present, and dispatches the request to the media worker
-profile `career_jd_cv_review`. It is inactive by default until the worker profile
-is deployed and a controlled end-to-end test has passed.
+profile `career_jd_cv_review`.
+
+Dispatch uses the `Cloudflare Access - Media Worker` custom auth credential plus
+the worker bearer token header. Controlled smoke
+`career-review-n8n-smoke-1783487820` returned HTTP `202`, completed as
+`career_jd_cv_review`, uploaded four `generated/presentation` artifacts, and
+served the public artifact page:
+
+```text
+https://openclaw-media.techmatrx.com/artifacts/career-review-n8n-smoke-1783487820/
+```
 
 Accepted source shapes include:
 
