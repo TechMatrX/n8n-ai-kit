@@ -1,0 +1,204 @@
+{
+  "_openclawExport": {
+    "exportedAt": "2026-07-08T04:01:04.187Z",
+    "source": "n8n_get_workflow",
+    "purpose": "Version inactive career JD/CV review submit workflow from n8n",
+    "workflowId": "s1YNvxn73onMsdYY",
+    "workflowName": "AGE17 Dev - Career JD CV Review Submit v1",
+    "activeAtExport": false,
+    "versionId": "fc9edf83-256a-4778-ad01-5b312dad037c",
+    "activeVersionId": null,
+    "versionCounter": 1
+  },
+  "name": "AGE17 Dev - Career JD CV Review Submit v1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dev/media/career-jd-cv-review-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Career Review Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "665cfa54-8fe6-4ed3-9d62-05b7ef28b2af"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const source = $input.first().json.body ?? $input.first().json;\nfunction text(value) { return typeof value === 'string' ? value.trim() : ''; }\nfunction object(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }\nfunction firstText(...values) { for (const value of values) { const result = text(value); if (result) return result; } return ''; }\nfunction isUrl(value) { return /^https?:\\/\\//i.test(text(value)); }\nconst career = object(source.careerReview || source.career || source.jobApplicationReview);\nconst jd = object(career.jobDescription || source.jobDescription || source.jd);\nconst cv = object(career.cv || source.cv || source.resume);\nconst requestId = firstText(source.requestId, career.requestId) || `career-review-${Date.now()}`;\nconst traceId = firstText(source?.metadata?.traceId, career.traceId);\nconst title = firstText(career.title, source.title, jd.title, `${firstText(career.company, source.company, jd.company) || 'career'} ${firstText(career.role, source.role, jd.role, jd.title) || 'review'}`);\nconst jobDescriptionText = firstText(jd.text, jd.markdown, jd.source, source.jobDescriptionText, source.jdText, source.source);\nconst jobDescriptionUrl = isUrl(jd.url) ? text(jd.url) : (isUrl(jd.downloadUrl) ? text(jd.downloadUrl) : (isUrl(source.jobDescriptionUrl) ? text(source.jobDescriptionUrl) : (isUrl(source.jdUrl) ? text(source.jdUrl) : '')));\nconst cvText = firstText(cv.text, cv.markdown, cv.source, source.cvText, source.resumeText);\nconst cvUrl = isUrl(cv.url) ? text(cv.url) : (isUrl(cv.downloadUrl) ? text(cv.downloadUrl) : (isUrl(cv.assetUrl) ? text(cv.assetUrl) : (isUrl(source.cvUrl) ? text(source.cvUrl) : (isUrl(source.resumeUrl) ? text(source.resumeUrl) : ''))));\nconst errors = [];\nif (!jobDescriptionText && !jobDescriptionUrl) errors.push('jobDescription.text or jobDescription.url is required');\nif (!cvText && !cvUrl) errors.push('cv.text or cv.url is required');\nif (errors.length) {\n  return [{ json: { requestId, status: 'failed', route: 'error', responseCode: 400, errorCode: 'INVALID_CAREER_REVIEW_REQUEST', message: errors.join('; '), responseBody: { accepted: false, requestId, status: 'failed', errorCode: 'INVALID_CAREER_REVIEW_REQUEST', message: errors.join('; ') } } }];\n}\nconst jobId = `job_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;\nconst workerBaseUrl = String($env.MEDIA_WORKER_BASE_URL || 'https://media-worker.techmatrx.com').trim().replace(/\\/+$/, '');\nconst dispatchUrl = `${workerBaseUrl}/jobs`;\nconst profile = 'career_jd_cv_review';\nconst metadata = object(source.metadata);\nconst payload = {\n  careerReview: {\n    title,\n    company: firstText(career.company, source.company, jd.company),\n    role: firstText(career.role, source.role, jd.role, jd.title),\n    jobDescription: { text: jobDescriptionText, url: jobDescriptionUrl },\n    cv: { text: cvText, url: cvUrl },\n    sourcePolicy: 'cv-and-current-request-only',\n    language: firstText(career.language, source.language, 'en'),\n    notes: firstText(career.notes, source.notes)\n  },\n  metadata: {\n    ...metadata,\n    source: metadata.source || 'openclaw-career-review-submit-v1',\n    traceId: traceId || undefined,\n    requestedProfile: profile,\n    internalProfile: profile,\n    productWorkflow: 'career-jd-cv-review-submit-v1',\n    delivery: object(source.delivery || metadata.delivery)\n  }\n};\nreturn [{ json: { requestId, jobId, profile, dispatchUrl, route: 'continue', responseCode: 202, workerDispatchBody: { jobId, requestId, profile, payload }, responseBody: { accepted: true, requestId, jobId, profile, status: 'queued', message: 'Career JD/CV review queued' } } }];"
+      },
+      "id": "2",
+      "name": "Validate and Build Career Review",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-career-valid",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "continue",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "Validation Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.dispatchUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.MEDIA_WORKER_INGRESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.workerDispatchBody }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "4",
+      "name": "Dispatch To Worker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1080,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Validate and Build Career Review').first().json.responseBody) }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "5",
+      "name": "Respond Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1360,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.responseBody) }}",
+        "options": {
+          "responseCode": "={{ $json.responseCode || 400 }}"
+        }
+      },
+      "id": "6",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1080,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Career Review Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate and Build Career Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and Build Career Review": {
+      "main": [
+        [
+          {
+            "node": "Validation Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Passed?": {
+      "main": [
+        [
+          {
+            "node": "Dispatch To Worker",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatch To Worker": {
+      "main": [
+        [
+          {
+            "node": "Respond Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "staticData": null,
+  "pinData": null
+}

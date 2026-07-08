@@ -38,6 +38,7 @@ Workflows covered by this policy:
 | AGE17 Dev - Mermaid Preview Submit v1 | `XyKli7nWYa2JLjPJ` | success `all`, error `all` |
 | AGE17 Dev - Markdown Presentation Submit v1 | `Y5aNKgs7P0bJrEJY` | success `all`, error `all` |
 | AGE17 Dev - Markdown Mindmap Submit v1 | `R1X0civ6trpBVQbV` | success `all`, error `all` |
+| AGE17 Dev - Career JD CV Review Submit v1 | `s1YNvxn73onMsdYY` | success `all`, error `all`; inactive |
 | AGE17 Dev - Music Generate acestep_turbo Submit v2 | `ma2PY9x1YIcNlEBm` | success `all`, error `all` |
 | AGE17 Dev - Music Generate acestep_turbo | `CCc3iuVmmLBfCdNu` | success `all`, error `all` |
 
@@ -77,6 +78,54 @@ Expected artifacts:
 - Mermaid ERD source
 - SVG ERD
 - PNG ERD
+
+## AGE17 Dev - Career JD CV Review Submit v1
+
+Live workflow ID: `s1YNvxn73onMsdYY`
+
+Export:
+
+```text
+n8n/workflows/media/age17-career-jd-cv-review-submit-v1.json
+```
+
+This workflow accepts a job description plus an uploaded or pasted CV, validates
+that both sources are present, and dispatches the request to the media worker
+profile `career_jd_cv_review`. It is inactive by default until the worker profile
+is deployed and a controlled end-to-end test has passed.
+
+Accepted source shapes include:
+
+```json
+{
+  "requestId": "career-review-example",
+  "careerReview": {
+    "company": "Example Co",
+    "role": "AI Platform Architect",
+    "jobDescription": {
+      "text": "Job description markdown or text",
+      "url": "https://example.com/job-description.txt"
+    },
+    "cv": {
+      "text": "CV markdown or text",
+      "url": "https://example.com/cv.md"
+    },
+    "notes": "Optional targeting notes"
+  }
+}
+```
+
+The worker output is analysis-only and source-bound. It can suggest how to
+reframe existing CV evidence, but it must not invent employers, projects,
+metrics, authorship, credentials, or skills that are not present in the provided
+CV/current request context.
+
+Expected artifacts:
+
+- Career review report Markdown
+- CV update suggestions JSON
+- CV patch guidance Markdown
+- JD analysis JSON
 
 ## AGE17 Dev - Music Generate acestep_turbo Submit v2
 
