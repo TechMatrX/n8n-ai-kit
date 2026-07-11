@@ -14,6 +14,15 @@ integration inventory live in:
 Keep n8n stack implementation notes here. Record durable platform decisions and
 public contracts in the platform hub.
 
+Broker ownership note:
+
+- This repo owns the live NAS RabbitMQ container as part of `n8n-nas-bundle`.
+- RabbitMQ's platform role is command/job dispatch for media workers.
+- Redpanda's platform role is event/audit/replay and is owned by the
+  `ai-media-platform` platform profile.
+- Do not treat Redpanda as a RabbitMQ replacement without the architecture hub's
+  RabbitMQ/Redpanda migration gates.
+
 ![n8n.io - Screenshot](https://raw.githubusercontent.com/n8n-io/self-hosted-ai-starter-kit/main/assets/n8n-demo.gif)
 
 Curated by <https://github.com/n8n-io>, it combines the self-hosted n8n

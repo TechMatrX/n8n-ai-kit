@@ -2,6 +2,15 @@
 
 Status: Stage 4 promoted; production Submit v2 defaults to RabbitMQ.
 
+Platform boundary:
+
+- RabbitMQ remains the live media command/job dispatch broker owned by this
+  `n8n-ai-kit` NAS bundle.
+- Redpanda is not part of this RabbitMQ promotion path. It belongs to the
+  `ai-media-platform` event/audit/replay profile.
+- Any future RabbitMQ-to-Redpanda replacement must be designed in
+  `ai-media-platform` first; it is not a transport flag change.
+
 ## Stage 1 Live State
 
 Completed on 2026-06-15 in active workflow `ma2PY9x1YIcNlEBm`:
