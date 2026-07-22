@@ -150,6 +150,16 @@ vector memory and has no host port. Both images are digest-pinned by default,
 and both services adopt the existing `${NAS_ROOT}/ollama` and
 `${NAS_ROOT}/qdrant` data directories.
 
+One-shot imports and model downloads are profile-gated maintenance operations:
+
+```bash
+./scripts/run-n8n-import.sh bootstrap auto
+./scripts/pull-ollama-model.sh qwen3.5:0.8b
+```
+
+Use `./scripts/run-n8n-import.sh restore entities` only for an explicitly
+approved restore. Neither job runs during normal stack startup or restart.
+
 The core of the Self-hosted AI Starter Kit is a Docker Compose file, pre-configured with network and storage settings, minimizing the need for additional installations.
 After completing the installation steps above, simply follow the steps below to get started.
 

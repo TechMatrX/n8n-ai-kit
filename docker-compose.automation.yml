@@ -114,6 +114,95 @@ services:
       n8n:
         condition: service_healthy
 
+  n8n-import:
+    profiles: ["maintenance"]
+    image: ${N8N_AUTOMATION_IMAGE:-media-automation-n8n}
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      N8N_IMPORT_MODE: ${N8N_IMPORT_MODE:-bootstrap}
+      N8N_IMPORT_FORMAT: ${N8N_IMPORT_FORMAT:-auto}
+      N8N_IMPORT_CONFIRM_RESTORE: ${N8N_IMPORT_CONFIRM_RESTORE:-}
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - |
+        set -eu
+        import_mode="$${N8N_IMPORT_MODE:-bootstrap}"
+        import_format="$${N8N_IMPORT_FORMAT:-auto}"
+        existing_workflows="$$(n8n list:workflow --onlyId 2>/dev/null || true)"
+
+        case "$$import_mode" in
+          bootstrap)
+            if [ -n "$$existing_workflows" ]; then
+              echo "Existing workflows detected; bootstrap import skipped"
+              exit 0
+            fi
+            ;;
+          restore)
+            if [ "$${N8N_IMPORT_CONFIRM_RESTORE:-}" != "RESTORE" ]; then
+              echo "Restore refused: set N8N_IMPORT_CONFIRM_RESTORE=RESTORE" >&2
+              exit 64
+            fi
+            ;;
+          *) echo "Unsupported N8N_IMPORT_MODE=$$import_mode" >&2; exit 64 ;;
+        esac
+
+        if [ "$$import_format" = "auto" ]; then
+          if [ -d /backup/entities ] && [ -n "$$(ls -A /backup/entities 2>/dev/null)" ]; then
+            import_format=entities
+          else
+            import_format=split
+          fi
+        fi
+
+        case "$$import_format" in
+          entities)
+            if [ ! -d /backup/entities ] || [ -z "$$(ls -A /backup/entities 2>/dev/null)" ]; then
+              echo "No entity payload found in /backup/entities" >&2
+              exit 66
+            fi
+            if [ "$$import_mode" = "restore" ]; then
+              n8n import:entities --inputDir=/backup/entities --truncateTables
+            else
+              n8n import:entities --inputDir=/backup/entities
+            fi
+            ;;
+          split)
+            imported=false
+            if [ -d /backup/credentials ] && [ -n "$$(ls -A /backup/credentials 2>/dev/null)" ]; then
+              n8n import:credentials --separate --input=/backup/credentials
+              imported=true
+            fi
+            if [ -d /backup/workflows ] && [ -n "$$(ls -A /backup/workflows 2>/dev/null)" ]; then
+              n8n import:workflow --separate --input=/backup/workflows
+              imported=true
+            fi
+            if [ "$$imported" != true ]; then
+              echo "No split import payload found under /backup" >&2
+              exit 66
+            fi
+            ;;
+          *) echo "Unsupported N8N_IMPORT_FORMAT=$$import_format" >&2; exit 64 ;;
+        esac
+
+        echo "n8n import completed: mode=$$import_mode format=$$import_format"
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT}/backup:/backup:ro
+      - ${NAS_ROOT:?set NAS_ROOT}/n8n-files:/home/node/.n8n-files
+    networks:
+      - automation-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   cloudflared:
     image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
     restart: unless-stopped

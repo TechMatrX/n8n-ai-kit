@@ -38,3 +38,39 @@ services:
       timeout: 5s
       retries: 20
       start_period: 20s
+
+  ollama-model-pull:
+    profiles: ["models"]
+    image: ${OLLAMA_NAS_IMAGE:-ollama/ollama@sha256:fbaaecc6c632a73c2b4ca25ef52dbee0b68d07783fcb850f916404c004040f90}
+    restart: "no"
+    environment:
+      OLLAMA_HOST: ollama-nas:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - |
+        set -eu
+        model="$${OLLAMA_MODEL:-}"
+        if [ -z "$$model" ]; then
+          echo "OLLAMA_MODEL is required" >&2
+          exit 64
+        fi
+        retries=60
+        until ollama list >/dev/null 2>&1; do
+          retries=$$((retries - 1))
+          if [ "$$retries" -le 0 ]; then
+            echo "Timed out waiting for Ollama" >&2
+            exit 1
+          fi
+          sleep 2
+        done
+        echo "Pulling Ollama model: $$model"
+        ollama pull "$$model"
+        ollama show "$$model" >/dev/null
+        echo "Ollama model verified: $$model"
+    networks:
+      - automation-internal
+    depends_on:
+      ollama-nas:
+        condition: service_healthy
