@@ -1,0 +1,140 @@
+name: media-automation
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT}/postgres:/var/lib/postgresql/data
+    networks:
+      - automation-internal
+      - observability
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  postgres-public-5433:
+    image: ${POSTGRES_PUBLIC_FORWARD_IMAGE:-alpine/socat:latest}
+    restart: unless-stopped
+    command: -dd TCP-LISTEN:5433,fork,reuseaddr TCP:postgres:5432
+    ports:
+      - "5433:5433"
+    networks:
+      - automation-internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+      args:
+        N8N_IMAGE: ${N8N_IMAGE:-n8nio/n8n:2.27.4}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE:-false}
+      WEBHOOK_URL: ${WEBHOOK_URL:?set WEBHOOK_URL}
+      N8N_HOST: ${N8N_HOST:?set N8N_HOST}
+      N8N_PORT: ${N8N_PORT:-5678}
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-https}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-${WEBHOOK_URL}}
+      N8N_DEFAULT_BINARY_DATA_MODE: ${N8N_DEFAULT_BINARY_DATA_MODE:-filesystem}
+      N8N_RESTRICT_FILE_ACCESS_TO: ${N8N_RESTRICT_FILE_ACCESS_TO:-/home/node/.n8n-files,/backup,/data/shared}
+      N8N_SSRF_PROTECTION_ENABLED: "true"
+      N8N_SSRF_ALLOWED_HOSTNAMES: ${N8N_SSRF_ALLOWED_HOSTNAMES:-host.docker.internal,n8n,postgres,rabbitmq,minio}
+      N8N_SSRF_ALLOWED_IP_RANGES: ${N8N_SSRF_ALLOWED_IP_RANGES:-}
+      N8N_RUNNERS_MODE: ${N8N_RUNNERS_MODE:-external}
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN:?set N8N_RUNNERS_AUTH_TOKEN}
+      N8N_RUNNERS_BROKER_LISTEN_ADDRESS: ${N8N_RUNNERS_BROKER_LISTEN_ADDRESS:-0.0.0.0}
+      N8N_NATIVE_PYTHON_RUNNER: ${N8N_NATIVE_PYTHON_RUNNER:-true}
+      MEDIA_DISPATCH_MODE: ${MEDIA_DISPATCH_MODE:-rabbitmq}
+      RABBITMQ_URL: ${RABBITMQ_URL:?set RABBITMQ_URL}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-media.jobs}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-media.jobs.ready}
+      RABBITMQ_RETRY_EXCHANGE: ${RABBITMQ_RETRY_EXCHANGE:-media.jobs.retry}
+      RABBITMQ_RETRY_QUEUE: ${RABBITMQ_RETRY_QUEUE:-media.jobs.retry.1m}
+      RABBITMQ_DEAD_QUEUE: ${RABBITMQ_DEAD_QUEUE:-media.jobs.dead}
+    ports:
+      - "5678:5678"
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT}/n8n:/home/node/.n8n
+      - ${NAS_ROOT:?set NAS_ROOT}/backup:/backup
+      - ${NAS_ROOT:?set NAS_ROOT}/shared:/data/shared
+      - ${NAS_ROOT:?set NAS_ROOT}/n8n-files:/home/node/.n8n-files
+    networks:
+      - automation-internal
+      - control
+      - messaging
+      - data
+      - observability
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:5678/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  task-runners:
+    image: ${N8N_RUNNERS_IMAGE:-n8nio/runners:2.27.4}
+    restart: unless-stopped
+    environment:
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN:?set N8N_RUNNERS_AUTH_TOKEN}
+      N8N_RUNNERS_TASK_BROKER_URI: http://n8n:5679
+      N8N_RUNNERS_LAUNCHER_LOG_LEVEL: ${N8N_RUNNERS_LAUNCHER_LOG_LEVEL:-info}
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-Asia/Ho_Chi_Minh}
+    volumes:
+      - ./n8n-task-runners.json:/etc/n8n-task-runners.json:ro
+    networks:
+      - automation-internal
+    depends_on:
+      n8n:
+        condition: service_healthy
+
+  cloudflared:
+    image: ${CLOUDFLARED_IMAGE:-cloudflare/cloudflared:latest}
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - automation-internal
+      - observability
+    depends_on:
+      n8n:
+        condition: service_healthy
+
+networks:
+  automation-internal:
+    internal: true
+  control:
+    external: true
+    name: media-control
+  messaging:
+    external: true
+    name: media-messaging
+  data:
+    external: true
+    name: media-data
+  observability:
+    external: true
+    name: media-observability
