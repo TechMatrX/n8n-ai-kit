@@ -1,0 +1,40 @@
+services:
+  ollama-nas:
+    image: ${OLLAMA_NAS_IMAGE:-ollama/ollama@sha256:fbaaecc6c632a73c2b4ca25ef52dbee0b68d07783fcb850f916404c004040f90}
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT}/ollama:/root/.ollama
+    networks:
+      automation-internal:
+        aliases:
+          - ollama
+          - ollama-nas
+      control:
+      observability:
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+  qdrant:
+    image: ${QDRANT_STARTER_IMAGE:-qdrant/qdrant@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c}
+    restart: unless-stopped
+    volumes:
+      - ${NAS_ROOT:?set NAS_ROOT}/qdrant:/qdrant/storage
+    networks:
+      automation-internal:
+        aliases:
+          - qdrant
+      data:
+      observability:
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "exec 3<>/dev/tcp/127.0.0.1/6333"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s

@@ -133,6 +133,23 @@ docker compose --profile cpu up
 
 ## ⚡️ Quick start and usage
 
+### Optional NAS AI starter kit
+
+The bounded `media-automation` deployment can add Ollama and Qdrant without
+making either service a startup dependency of n8n:
+
+```bash
+docker compose --env-file .env \
+  -f docker-compose.automation.yml \
+  -f docker-compose.ai-starter.yml up -d
+```
+
+Ollama is the NAS CPU/cloud fallback for automation workflows; the Mac/GPU
+endpoint remains the preferred inference route. Qdrant is internal workflow
+vector memory and has no host port. Both images are digest-pinned by default,
+and both services adopt the existing `${NAS_ROOT}/ollama` and
+`${NAS_ROOT}/qdrant` data directories.
+
 The core of the Self-hosted AI Starter Kit is a Docker Compose file, pre-configured with network and storage settings, minimizing the need for additional installations.
 After completing the installation steps above, simply follow the steps below to get started.
 

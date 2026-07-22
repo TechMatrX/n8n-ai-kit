@@ -59,7 +59,7 @@ services:
       N8N_DEFAULT_BINARY_DATA_MODE: ${N8N_DEFAULT_BINARY_DATA_MODE:-filesystem}
       N8N_RESTRICT_FILE_ACCESS_TO: ${N8N_RESTRICT_FILE_ACCESS_TO:-/home/node/.n8n-files,/backup,/data/shared}
       N8N_SSRF_PROTECTION_ENABLED: "true"
-      N8N_SSRF_ALLOWED_HOSTNAMES: ${N8N_SSRF_ALLOWED_HOSTNAMES:-host.docker.internal,n8n,postgres,rabbitmq,minio}
+      N8N_SSRF_ALLOWED_HOSTNAMES: ${N8N_SSRF_ALLOWED_HOSTNAMES:-host.docker.internal,n8n,postgres,rabbitmq,minio,ollama,ollama-nas,qdrant}
       N8N_SSRF_ALLOWED_IP_RANGES: ${N8N_SSRF_ALLOWED_IP_RANGES:-}
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       N8N_SKIP_AUTH_ON_OAUTH_CALLBACK: "false"
