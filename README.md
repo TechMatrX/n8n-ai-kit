@@ -16,12 +16,28 @@ public contracts in the platform hub.
 
 Broker ownership note:
 
-- This repo owns the live NAS RabbitMQ container as part of `n8n-nas-bundle`.
+- This repo owns the live NAS RabbitMQ container inside the bounded
+  `media-messaging` deployment.
 - RabbitMQ's platform role is command/job dispatch for media workers.
 - Redpanda's platform role is event/audit/replay and is owned by the
   `ai-media-platform` platform profile.
 - Do not treat Redpanda as a RabbitMQ replacement without the architecture hub's
   RabbitMQ/Redpanda migration gates.
+
+OpenTelemetry boundary:
+
+- The custom n8n image includes pinned Node.js OpenTelemetry
+  auto-instrumentation.
+- `media-automation` exports HTTP, PostgreSQL, and AMQP traces plus runtime
+  metrics over OTLP/HTTP to `otel-collector:4318` on the private observability
+  network.
+- Incoming W3C trace context is continued where present; the RabbitMQ
+  instrumentation injects the active `traceparent` into media-job message
+  headers for `media-worker-daemon` to extract.
+- Export is asynchronous and fail-open. Collector or backend failure must not
+  block workflow execution or RabbitMQ publication.
+- Filesystem and DNS instrumentation are disabled to control volume. OTel logs
+  remain disabled until n8n has a structured-log bridge.
 
 ![n8n.io - Screenshot](https://raw.githubusercontent.com/n8n-io/self-hosted-ai-starter-kit/main/assets/n8n-demo.gif)
 
